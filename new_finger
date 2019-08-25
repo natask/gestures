@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+#     Event code 325 (BTN_TOOL_FINGER)		f1
+#     Event code 328 (BTN_TOOL_QUINTTAP)	f5
+#     Event code 330 (BTN_TOUCH)		 	when touched
+#     Event code 333 (BTN_TOOL_DOUBLETAP)	f2
+#     Event code 334 (BTN_TOOL_TRIPLETAP)	f3
+#     Event code 335 (BTN_TOOL_QUADTAP)		f4
+
+
+# EVEMU 1.3
+# Kernel: 5.0.10-surface-linux-surface
+# DMI: dmi:bvnMicrosoftCorporation:bvr91.2439.769:bd12/07/2018:svnMicrosoftCorporation:pnSurfaceBook:pvrD0B09F1C03P38:rvnMicrosoftCorporation:rnSurfaceBook:rvr:cvnMicrosoftCorporation:ct9:cvr:
+# Input device name: "Microsoft Surface Keyboard Touchpad"
+# Input device ID: bus 0x03 vendor 0x45e product 0x7cd version 0x111
+# Size in mm: 101x66
+# Supported events:
+#   Event type 0 (EV_SYN)
+#     Event code 0 (SYN_REPORT)
+#     Event code 1 (SYN_CONFIG)
+#     Event code 2 (SYN_MT_REPORT)
+#     Event code 3 (SYN_DROPPED)
+#     Event code 4 ((null))
+#     Event code 5 ((null))
+#     Event code 6 ((null))
+#     Event code 7 ((null))
+#     Event code 8 ((null))
+#     Event code 9 ((null))
+#     Event code 10 ((null))
+#     Event code 11 ((null))
+#     Event code 12 ((null))
+#     Event code 13 ((null))
+#     Event code 14 ((null))
+#     Event code 15 (SYN_MAX)
+#   Event type 1 (EV_KEY)
+#     Event code 272 (BTN_LEFT)
+#     Event code 325 (BTN_TOOL_FINGER)
+#     Event code 328 (BTN_TOOL_QUINTTAP)
+#     Event code 330 (BTN_TOUCH)
+#     Event code 333 (BTN_TOOL_DOUBLETAP)
+#     Event code 334 (BTN_TOOL_TRIPLETAP)
+#     Event code 335 (BTN_TOOL_QUADTAP)
+#   Event type 3 (EV_ABS)
+#     Event code 0 (ABS_X) -> of the first finger that is on the thouchpad
+#       Value     1115
+#       Min          0
+#       Max       2020
+#       Fuzz         0
+#       Flat         0
+#       Resolution  20
+#     Event code 1 (ABS_Y) -> of the first finger that is on the thouchpad
+#       Value      677
+#       Min          0
+#       Max       1321
+#       Fuzz         0
+#       Flat         0
+#       Resolution  20
+#     Event code 47 (ABS_MT_SLOT) -> which finger
+#       Value        1
+#       Min          0
+#       Max         14
+#       Fuzz         0
+#       Flat         0
+#       Resolution   0
+#     Event code 53 (ABS_MT_POSITION_X) -> of the currrently moving finger, ABS_MT_SLOT is sent out before
+#       Value        0
+#       Min          0
+#       Max       2020
+#       Fuzz         0
+#       Flat         0
+#       Resolution  20
+#     Event code 54 (ABS_MT_POSITION_Y) -> of the currrently moving finger, ABS_MT_SLOT of finger is sent out before
+#       Value        0
+#       Min          0
+#       Max       1321
+#       0         Fuzz
+#       Flat         0
+#       Resolution  20
+#     Event code 57 (ABS_MT_TRACKING_ID) -> sent out with a value when finger first touch and sent -1 when finger leaves, pretty useless for now
+#       Value        0
+#       Min          0
+#       Max      65535
+#       Fuzz         0
+#       Flat         0
+#       Resolution   0
+#   Event type 4 (EV_MSC)
+#     Event code 5 (MSC_TIMESTAMP)
+# Properties:
+#   Property  type 0 (INPUT_PROP_POINTER)
+#   Property  type 2 (INPUT_PROP_BUTTONPAD)
+
+# state diagram
+# sometimes: ramp up to finger, usually sending 1,0 for each finger combination (depends on speed) -> send movement of each finger -> ramp down with each finger leaving, sending 1,0 for each finger combination
+# eg: 5 finger tap
+# 					ramp up						ramp down
+# t1 -> 1b1 -> 1b0 -> 2b1 -> 2b0 -> 3b1 -> 3b0 -> 4b1 -> 4b0 -> 5b1 -> 5b0 -> 4b1 -> 4b0 -> 3b1 -> 3b0 -> 2b1 -> 2b0 -> 1b1 -> 1b0 -> t1
+# release usually takes around 5ms
+# fastest tap is around 10ms
+
+# turns out that it terminates presed fingers when a 6th finger is pressed down. it resumes firing events after all finger are removed.
+import subprocess
+import threading
+
+DEBOUNCE = 10; # ms used for debouncing, fastest tap is more than 25 ms
+#TOOL = "evemu-record"; # evemu or evtest works
+
+def main():
+	device = "touchpad"
+ 	result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    for device_event in filter_result:
+    	device_event_index = device_event.find("event")
+    	device_event_name = device_event[device_event_index:]
+    	threading.Thread(target=gestures_evtest, args=[device_event_name]).start() #change here to use evemu-record
+	return 1;
+
+def f1():
+	return 0;
+
+def f2():
+	return 0;
+
+def f3():
+	return 0;
+
+def f4():
+	return 0;
+
+def f5():
+	return 0;
+
+def debounce_verify():
+	return 0;
+
+def evemu_reader(line):
+	return 0;
+
+def evtest_reader(line);
+	return 0;
+
+def gestures_evtest():
+	cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+   	handler = None
+    count = 0
+    state = ["0","0","0","0","0","0","0"] #state of each event touch, (1-5)
+    debounce_pending = [(0,0),(0,0),(0,0),[0,] #status of debounce for 1 - 4 (5 and touch don't need debounce)
+    event_dict = {
+    			"(BTN_TOUCH),": f1
+    			"(BTN_TOOL_FINGER),": f2
+    			"(BTN_TOOL_DOUBLETAP),": f1
+    			"(BTN_TOOL_TRIPLETAP),": f1
+    			"(BTN_TOOL_QUADTAP),": f1
+    			"(BTN_TOOL_QUINTTAP),": f1
+    			"(BTN_TOUCH),": f1
+    			"(BTN_TOUCH),": f1
+    			""
+    for line in cmd.stdout:
+    	# implement debouncing and switching from one to another
+    	line_arr = line.split()
+    	time = float(line_arr[2][:-1])
+		state, event =  line_arr[-1],line_arr[-3]
+    	if "(BTN_TOUCH)," == event:
+    		status[-1] = state;
+        	continue
+		if "(BTN_TOOL_FINGER),"== event:
+			if state == "1":
+				debounce_pending[0] = state;
+			f1();
+
+        	continue
+
+		if "(BTN_TOOL_DOUBLETAP)," == event:
+        	continue
+
+		if "(BTN_TOOL_TRIPLETAP)," not in line:
+        	continue
+
+		if "(BTN_TOOL_QUADTAP)," not in line:
+        	continue
+
+		if "(BTN_TOOL_QUINTTAP)," not in line:
+        	continue
+
+		debounce_verify()
+	return 0;
+
+
+def gestures_evemu(): #events are not surrounded by () plus ,
+	cmd = subprocess.Popen(["stdbuf", "-oL", "--",TOOL,f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+   	handler = None
+    count = 0
+    state = ["0","0","0","0","0","0","0"] #state of each event touch, (1-5)
+    debounce_pending = [(0,0),(0,0),(0,0),[0,] #status of debounce for 1 - 4 (5 and touch don't need debounce)
+    event_dict = {
+    			"(BTN_TOUCH),": f1
+    			"(BTN_TOOL_FINGER),": f2
+    			"(BTN_TOOL_DOUBLETAP),": f1
+    			"(BTN_TOOL_TRIPLETAP),": f1
+    			"(BTN_TOOL_QUADTAP),": f1
+    			"(BTN_TOOL_QUINTTAP),": f1
+    			"(BTN_TOUCH),": f1
+    			"(BTN_TOUCH),": f1
+    			""
+    for line in cmd.stdout:
+    	# implement debouncing and switching from one to another
+    	line_arr = line.split()
+    	time,state,event = float(line_arr[1]), line_arr[-1],line_arr[-2]
+	return 0;
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+import subprocess
+import threading
+
+def main():
+    device = "touchpad"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    for device_event in filter_result:
+        device_event_index = device_event.find("event")
+        device_event_name = device_event[device_event_index:]
+        threading.Thread(target=test, args=[device_event_name]).start() #change here to use evemu-record
+    return 1;
+
+def test(device_event_name):
+    cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+
+    for line in cmd.stdout:
+        # implement debouncing and switching from one to another
+
+        # removes startup printing
+        line_arr = line.split()
+        if (len(line_arr) < 2 or line_arr[1] != "time"):
+            continue
+
+        # get time,state, and event
+        time = line_arr[2][:-1]
+        state, event =  line_arr[-1],line_arr[-3]
+
+        if (event != "(ABS_MT_SLOT)," and event != "(ABS_MT_TRACKING_ID),"):
+            continue
+        print(f"time = {time}, state = {state}, event = {event}")
+
+if __name__ == "__main__":
+    main()

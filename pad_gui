@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+from tkinter import *
+#!/usr/bin/env python3
+import subprocess
+import threading
+
+def main():
+    device = "touchpad"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    for device_event in filter_result:
+        device_event_index = device_event.find("event")
+        device_event_name = device_event[device_event_index:]
+        threading.Thread(target=test, args=[device_event_name]).start() #change here to use evemu-record
+    return 1;
+
+
+
+def create_circle(x, y, r, canvasName): #center coordinates, radius
+    x0 = x - r
+    y0 = y - r
+    x1 = x + r
+    y1 = y + r
+    return canvasName.create_oval(x0, y0, x1, y1,)
+
+def create_circle_and_text(x, y, r, id, slot, font_size, canvasName): #center coordinates, radius
+    x0 = x - r
+    y0 = y - r
+    x1 = x + r
+    y1 = y + r
+    return [canvasName.create_oval(x0, y0, x1, y1), canvasName.create_text(x,y,fill="darkblue",font=f"Times {font_size} italic bold",
+                            text=f"     id = {id} \n        slot = {slot}")]
+
+def test(device_event_name):
+    root = Tk()
+    myCanvas = Canvas(root,width=2020,height=1321)
+    myCanvas.pack()
+
+    # fgr1 = create_circle(100, 100, 20, myCanvas)
+    # fgr2 = create_circle(50, 25, 10, myCanvas)
+    #
+    # x1 = 100
+    # y1 = 100
+
+    status_dict = {}
+    slot = "0"
+    RADIUS = 135 #this is actually half of the radius of the circle
+    FONT_SIZE = 12
+    update = False
+
+    cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+
+    for line in cmd.stdout:
+        # implement debouncing and switching from one to another
+
+        # removes startup printing
+        line_arr = line.split()
+        if (len(line_arr) < 2 or line_arr[1] != "time"):
+            continue
+
+        # get time,state, and event
+        time = line_arr[2][:-1]
+        state, event =  line_arr[-1],line_arr[-3]
+
+        if "(ABS_MT_TRACKING_ID)," == event:
+            if state == "-1":
+                try:
+                    myCanvas.delete(status_dict[slot]["objs"][0])
+                    myCanvas.delete(status_dict[slot]["objs"][1])
+                    del status_dict[slot]
+                    root.update() # neded to updateafter eremoving last element (finger from thouchpad) or just to update
+                except:
+                    del status_dict[slot]
+                #print(status_dict)
+            else:
+                status_dict[slot] = {"id": state, "x_updated": 0, "y_updated": 0}
+
+
+        if "(ABS_MT_SLOT)," == event:
+            slot = state
+
+        if "(ABS_MT_POSITION_X)," == event:
+            status_dict[slot]["x"] = int(state);
+            status_dict[slot]["x_updated"] += 1;
+            update = True;
+
+        if "(ABS_MT_POSITION_Y)," == event:
+            status_dict[slot]["y"] = int(state);
+            status_dict[slot]["y_updated"] += 1;
+            update = True;
+
+        # if "(ABS_X)," == event:
+        #     x1 = int(state)
+        #     update = True
+        #
+        # if "(ABS_Y)," == event:
+        #     y1 = int(state)
+        #     update = True
+
+        if event == "--------------" or event == "(MSC_TIMESTAMP),":
+            continue
+
+        if update:
+            if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] < 1:
+                update = False
+                continue
+
+            x = status_dict[slot]["x"];
+            y = status_dict[slot]["y"];
+            if ("objs" not in status_dict[slot]):
+                objs = create_circle_and_text(x, y, RADIUS,  status_dict[slot]["id"], slot, FONT_SIZE, myCanvas);
+                status_dict[slot]["objs"] = objs;
+            else:
+                obj =  status_dict[slot]["objs"][0]; #circle
+                myCanvas.coords(obj, x - RADIUS, y - RADIUS, x + RADIUS, y + RADIUS);
+                obj =  status_dict[slot]["objs"][1]; #text
+                myCanvas.coords(obj, x ,y);
+
+            update = False;
+            root.update();
+
+        print(f"time = {time}, state = {state}, event = {event}")
+
+
+if __name__ == "__main__":
+    main()
