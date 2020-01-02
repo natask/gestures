@@ -26,6 +26,8 @@ REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes oversteppi
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
+
+# touchpad centric gesture worker
 class Worker(threading.Thread):
     """ A worker thread that takes directory names from a queue, finds all
         files in them recursively and reports the result.
@@ -479,135 +481,9 @@ class Worker(threading.Thread):
         subprocess.call("xkbset -sticky".split());
         subprocess.call("xkbset sticky".split());
 
-# ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
-def main():
-    device = "touchpad"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
-    filter_result = list(filter(lambda x: x.find("event") != -1,result))
-    for device_event in filter_result:
-        device_event_index = device_event.find("event")
-        device_event_name = device_event[device_event_index:]
-        threading.Thread(target=test, args=[device_event_name, 1, device]).start() #change here to use evemu-record
-
-    device = "touchscreen"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
-    filter_result = list(filter(lambda x: x.find("event") != -1,result))
-    for device_event in filter_result:
-       device_event_index = device_event.find("event")
-       device_event_name = device_event[device_event_index:]
-       threading.Thread(target=test, args=[device_event_name, 2, device]).start() #change here to use evemu-record
-    return 1;
-
-def test(device_event_name, factor, dev):
-    #make sure to start with a single finger when the base re-attaches because slot and tracking id won't fire before position
-    status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
-    slot = "0"
-    update = False
-
-    # queue and worker
-    q = queue.Queue()
-    if (dev ==  "touchpad"):
-        w = Worker(q)
-    else: 
-        w = Touch_Screen_Worker(q)
-    w.start()
-
-    # orientation, emplementing x and y swap takes a bit more of work
-    orientation = subprocess.getoutput("orientation");
-    print(orientation);
-    orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
-    orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
-    
-    swap_x_y = True if("right" == orientation or "left" == orientation) else False;
-    #print(swap_x_y)
-    cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
-
-    for line in cmd.stdout:
-        # implement debouncing and switching from one to another
-
-        # removes startup printing
-        line_arr = line.split()
-        #sys.stderr.write(str(line_arr))
-        #sys.stderr.write("\n")
-        if (len(line_arr) < 2 or line_arr[1] != "time"):
-            continue
-
-        # get time,state, and event
-        time = line_arr[2][:-1]
-        state, event =  line_arr[-1],line_arr[-3]
-
-        if "(ABS_MT_TRACKING_ID)," == event:
-            if state == "-1":
-                try:
-                    del status_dict[slot]
-
-                except:
-                    del status_dict[slot]
-
-                #notify worker to flush queue after finger is removed
-                q.put({"type": "finger_remove", "removed_slot": slot,"time": time })
-                #print(status_dict)
-            else:
-                status_dict[slot] = {"id": state, "x_updated": 0, "y_updated": 0}
-
-                # debounce worker when finger is added
-                # q.put({"type": "debounce"})
-                #q.put({"type": "gesture_end", "time": time})
 
 
-        if "(ABS_MT_SLOT)," == event:
-            slot = state
-
-        if "(ABS_MT_POSITION_X)," == event:
-            if(swap_x_y):
-               status_dict[slot]["y"] = float(state) / factor * orientation_y;
-               status_dict[slot]["y_updated"] += 1;
-            else: 
-               status_dict[slot]["x"] = float(state) / factor * orientation_x;
-               status_dict[slot]["x_updated"] += 1;
-            update = True;
-
-        if "(ABS_MT_POSITION_Y)," == event:
-           if(swap_x_y):
-               status_dict[slot]["x"] = float(state) / factor * orientation_x;
-               status_dict[slot]["x_updated"] += 1;
-           else:
-               status_dict[slot]["y"] = float(state) / factor * orientation_y;
-               status_dict[slot]["y_updated"] += 1;
-           update = True;
-
-        # if "(ABS_X)," == event:
-        #     x1 = int(state)
-        #     update = True
-        #
-        # if "(ABS_Y)," == event:
-        #     y1 = int(state)
-        #     update = True
-
-        if event == "--------------" or event == "(MSC_TIMESTAMP),":
-            continue
-
-        if update:
-            if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] <  1:
-                update = False
-                continue
-
-            x = status_dict[slot]["x"];
-            y = status_dict[slot]["y"];
-            finger_type = "";
-
-            if ("objs" not in status_dict[slot]):
-                status_dict[slot]["objs"] = True; # a way to call finger start the firt time a find is pressend down
-                finger_type = "finger_start";
-            else:
-                finger_type = "finger_update";
-
-            update = False;
-
-            q.put({"type": finger_type, "slot": slot, "time": time, slot: {"id": status_dict[slot]["id"], "x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
-
-        #print(f"time = {time}, state = {state}, event = {event}")
-
+# touchscreen centric gesture worker
 class Touch_Screen_Worker(threading.Thread):
     """ A worker thread that takes directory names from a queue, finds all
         files in them recursively and reports the result.
@@ -1062,6 +938,163 @@ class Touch_Screen_Worker(threading.Thread):
         subprocess.call("xkbset sticky".split());
 
 
+# define and start gestures  
+
+# N: Name="ipts 1B96:005E"
+# P: Phys=heci3
+# S: Sysfs=/devices/pci0000:00/0000:00:16.4/mei::3e8d0870-271a-4208-8eb5-9acb9402ae04:0F/0044:1B96:005E.0007/input/input32
+# U: Uniq=
+# H: Handlers=mouse4 event26 
+# B: PROP=2
+# B: EV=1b
+# B: KEY=400 0 0 0 0 0
+# B: ABS=32f3800000000003
+# B: MSC=20
+# --
+# N: Name="Microsoft Surface Keyboard Touchpad"
+# P: Phys=usb-0000:00:14.0-1.4/input0
+# S: Sysfs=/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1.4/1-1.4:1.0/0003:045E:07CD.0012/input/input89
+# U: Uniq=
+# H: Handlers=mouse1 event6 
+# B: PROP=5
+# B: EV=1b
+# B: KEY=e520 10000 0 0 0 0
+# B: ABS=260800000000003
+# B: MSC=20
+
+# ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
+def main():
+    device = "touchpad"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    for device_event in filter_result:
+        device_event_index = device_event.find("event")
+        device_event_name = device_event[device_event_index:]
+        threading.Thread(target=test, args=[device_event_name, 1, device]).start() #change here to use evemu-record
+
+    device = "touchscreen"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
+        device = "400 0 0 0 0 0"
+        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
+        filter_result = list(filter(lambda x: x.find("event") != -1,result))
+
+    for device_event in filter_result:
+       device_event_index = device_event.find("event")
+       device_event_name = device_event[device_event_index:]
+       threading.Thread(target=test, args=[device_event_name, 2, device]).start() #change here to use evemu-record
+    return 1;
+
+def test(device_event_name, factor, dev):
+    #make sure to start with a single finger when the base re-attaches because slot and tracking id won't fire before position
+    status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
+    slot = "0"
+    update = False
+
+    # queue and worker
+    q = queue.Queue()
+    if (dev ==  "touchpad"):
+        w = Worker(q)
+    else: 
+        w = Touch_Screen_Worker(q)
+    w.start()
+
+    # orientation, emplementing x and y swap takes a bit more of work
+    orientation = subprocess.getoutput("orientation");
+    print(orientation);
+    orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
+    orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
+    
+    swap_x_y = True if("right" == orientation or "left" == orientation) else False;
+    #print(swap_x_y)
+    cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+
+    for line in cmd.stdout:
+        # implement debouncing and switching from one to another
+
+        # removes startup printing
+        line_arr = line.split()
+        #sys.stderr.write(str(line_arr))
+        #sys.stderr.write("\n")
+        if (len(line_arr) < 2 or line_arr[1] != "time"):
+            continue
+
+        # get time,state, and event
+        time = line_arr[2][:-1]
+        state, event =  line_arr[-1],line_arr[-3]
+
+        if "(ABS_MT_TRACKING_ID)," == event:
+            if state == "-1":
+                try:
+                    del status_dict[slot]
+
+                except:
+                    del status_dict[slot]
+
+                #notify worker to flush queue after finger is removed
+                q.put({"type": "finger_remove", "removed_slot": slot,"time": time })
+                #print(status_dict)
+            else:
+                status_dict[slot] = {"id": state, "x_updated": 0, "y_updated": 0}
+
+                # debounce worker when finger is added
+                # q.put({"type": "debounce"})
+                #q.put({"type": "gesture_end", "time": time})
+
+
+        if "(ABS_MT_SLOT)," == event:
+            slot = state
+
+        if "(ABS_MT_POSITION_X)," == event:
+            if(swap_x_y):
+               status_dict[slot]["y"] = float(state) / factor * orientation_y;
+               status_dict[slot]["y_updated"] += 1;
+            else: 
+               status_dict[slot]["x"] = float(state) / factor * orientation_x;
+               status_dict[slot]["x_updated"] += 1;
+            update = True;
+
+        if "(ABS_MT_POSITION_Y)," == event:
+           if(swap_x_y):
+               status_dict[slot]["x"] = float(state) / factor * orientation_x;
+               status_dict[slot]["x_updated"] += 1;
+           else:
+               status_dict[slot]["y"] = float(state) / factor * orientation_y;
+               status_dict[slot]["y_updated"] += 1;
+           update = True;
+
+        # if "(ABS_X)," == event:
+        #     x1 = int(state)
+        #     update = True
+        #
+        # if "(ABS_Y)," == event:
+        #     y1 = int(state)
+        #     update = True
+
+        if event == "--------------" or event == "(MSC_TIMESTAMP),":
+            continue
+
+        if update:
+            if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] <  1:
+                update = False
+                continue
+
+            x = status_dict[slot]["x"];
+            y = status_dict[slot]["y"];
+            finger_type = "";
+
+            if ("objs" not in status_dict[slot]):
+                status_dict[slot]["objs"] = True; # a way to call finger start the firt time a find is pressend down
+                finger_type = "finger_start";
+            else:
+                finger_type = "finger_update";
+
+            update = False;
+
+            q.put({"type": finger_type, "slot": slot, "time": time, slot: {"id": status_dict[slot]["id"], "x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
+
+        #print(f"time = {time}, state = {state}, event = {event}")
 if __name__ == "__main__":
     import sys
     # if call comes with arguments, pass only the first one. if it doesn't, start normal orientation operation
