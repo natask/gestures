@@ -16,7 +16,30 @@
 - I wanted usable gestures for my touchscreen.
 So I wrote this.
 
+* Features
+:PROPERTIES:
+:ID:       0255c74a-c55a-4107-98d5-ec1f67a7c7e2
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 07:37:48]
+:END:
+- vanilla gestures ::
+ features present in [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] and [[https://github.com/iberianpig/fusuma][fusuma]].
+- 5 finger gestures :: 
+This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN_TOOL_QUINTTAP must supported. This feature must supported by your driver + touchpad.
+check by running =evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP=. if it prints a line containing ~"BTN_TOOL_QUINTTAP"~, your touchpad+driver support it.
+- tap gestures ::
+This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
+- Touchscreen gestures ::
+Extend gestures to touchscreen.
+- Fluid gestures :: 
+Allow the user to do different things without raising their fingers from the touchpad. This takes advantage of the fact that gesture execution is separated into 3 parts, start, update, and end, by doing complementary actions in each.
 
+For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, where direction is "LEFT", "RIGHT", "UP", "DOWN".
+
+to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 * Dependencies 
 :PROPERTIES:
 :ID:       96ea91ca-f6d0-47f2-bdaa-52dd6903122b
