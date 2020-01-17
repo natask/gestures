@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from tkinter import *
-#!/usr/bin/env python3
-import subprocess
+# from tkinter import *
+import subprocess, pathlib, shlex
 import threading
 import queue
 import time
@@ -10,22 +9,25 @@ import sys
 from math import tan
 from math import pi
 
-DECISION = 100 # sufficient movement to make decision on direction
-#PINCH_DECISION = 30 #sufficient momvent to make pinch
+DECISION = 450 # sufficient movement to make decision on direction
+PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
 
 ANGLE = 70 #x/y angle cleance
 CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
 
-DEBOUNCE = 0.03  #sleep for 10 ms(now 30 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data
-THRESHOLD = 70 # threashold to be considered a move, squared sum of x and y
-PINCH_THRESHOLD = 300
+DEBOUNCE = 0.04  #sleep for 10 ms(now 30 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data
+THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
+PINCH_THRESHOLD = 100
 
-REP_THRES = 0.1 #need to break this TIME before REP engage
+REP_THRES = 0.2 #need to break this TIME before REP engage
 REP = 350 # for 3 finger stuff
-REP_3 = 350 # for 3 finger stuff
-REP_4 = 600 # for 4 finger stuff; repeat after this much x,y movement
+REP_3 = 150 # for 3 finger stuff
+REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
+REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
+
+# touchpad centric gesture worker
 class Worker(threading.Thread):
     """ A worker thread that takes directory names from a queue, finds all
         files in them recursively and reports the result.
@@ -58,6 +60,7 @@ class Worker(threading.Thread):
         while True:
             # get messages(dequeue from message queue) and do approperate action
             event = self.q.get(True)
+            #print("def: ", event)
             if event["type"] == "finger_start":
                 #print("finger_start")
                 self.finger_start(event);
@@ -74,9 +77,10 @@ class Worker(threading.Thread):
                 #print("executing")
                 #print(self.gesture_queue)
                 for gesture in self.gesture_queue:
-                    #print(gesture);
+                    #print(gesture)
                     subprocess.call(gesture);
                 self.gesture_queue = [];
+
 
     def finger_start(self, event):
         """ append new finger to gesture.
@@ -91,7 +95,6 @@ class Worker(threading.Thread):
         self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved" : 0, "dis-cum": 0},  "slots" : {} } # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum
         for key in slots:
             self.gesture["slots"][key] = {"x-cum": 0, "y-cum": 0, "moved": 0};
-        
 
         #  initiate state for finger
         slot = event["slot"];
@@ -107,14 +110,12 @@ class Worker(threading.Thread):
 
         self.gesture["slots"][slot]["moved"] = 0
 
-        self.update_status(slot, event[slot], 0);
+        self.update_status(slot, event[slot], 0); #need to wait until status updated before calcing max_dis
         max_dis =  self.max_distance();
-        
+        self.status_dis =  max_dis;
         #print(max_dis)
         #print(self.status);
-        self.gesture["total"]["dis-cum"] = 0;
-        
-        self.update_status(slot, event[slot], max_dis);
+
 
     def finger_update(self, event):
         """ Update started gesture
@@ -152,26 +153,34 @@ class Worker(threading.Thread):
             self.gesture["total"]["moved"] += self.gesture["slots"][slot]["moved"];
 
         elif (not self.gesture["type"]):
-            # what to do on first time all finger move
-            if(no_slots == self.gesture["total"]["moved"]):
+            # pinch
+            if(self.gesture["total"]["moved"] >= 1):# move out the pinch gesture sutff so that can do gestures when only one finger is moving
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
 
-                if (x_cum > DECISION or y_cum > DECISION):
-                    if(no_slots == 2):
-                       #print(dis_cum)
-                        if(x_cum + y_cum > 4 * DECISION): #small hack to stop pinch from interspeting scrolling
-                            self.gesture["type"] = "no_gesture";
-                        if(abs(dis_cum) > PINCH_THRESHOLD ):
-                            self.gesture["type"] = "pinch";
-                            if(dis_cum > 0): #pinch in
-                                self.gesture_queue.append("evemu_do control down".split());
-                                self.gesture_queue.append("evemu_do equal".split()); # in the future maybe get rid of plus or equal
-                            else: #pinch out
-                                self.gesture_queue.append("evemu_do control down".split());
-                                self.gesture_queue.append("evemu_do minus".split());
-                            self.rep_start = float(event["time"]);
+                #if (x_cum + y_cum > PINCH_DECISION):
+                if(no_slots == 2):
+                    #print(f"dis_cum = {dis_cum}")
+                    #print(f"x_cum + y_cum = {x_cum + y_cum}")
+                    if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
+                        self.gesture["type"] = "no_gesture";
+                    elif(abs(dis_cum) > PINCH_THRESHOLD ):
+                        self.gesture["type"] = "pinch";
+                        if(dis_cum > 0): #pinch in
+                            self.gesture_queue.append("evemu_do control down".split());
+                            self.gesture_queue.append("evemu_do equal".split()); # in the future maybe get rid of plus or equal
+                        else: #pinch out
+                            self.gesture_queue.append("evemu_do control down".split());
+                            self.gesture_queue.append("evemu_do minus".split());
+                        self.rep_start = float(event["time"]);
+
+            # swipe            
+            if(no_slots == self.gesture["total"]["moved"]):
+                x_cum = abs(self.gesture["total"]["x-cum"]);
+                y_cum = abs(self.gesture["total"]["y-cum"]);
+                dis_cum =  self.gesture["total"]["dis-cum"];
+                if (x_cum + y_cum > DECISION):
 
                     if(no_slots == 3):
                         if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
@@ -206,14 +215,14 @@ class Worker(threading.Thread):
                             self.gesture_queue.append("evemu_do ctrl+alt down".split()); #xdotool was causing issue when esc was pressed beforehand
                             if (x_cum > y_cum):
                                 if (self.gesture["total"]["x-cum"] >= 0):
-                                    self.gesture_queue.append("xdotool key Right".split());
+                                    self.gesture_queue.append("evemu_do Right".split()); #xdotool removed because was hanging on subprocess.call but not subprocess.Popen. p
                                 else:
-                                    self.gesture_queue.append("xdotool key Left".split());
+                                    self.gesture_queue.append("evemu_do Left".split());
                             else:
                                 if (self.gesture["total"]["y-cum"] >= 0):
-                                    self.gesture_queue.append("xdotool key Down".split());
+                                    self.gesture_queue.append("evemu_do Down".split());
                                 else:
-                                    self.gesture_queue.append("xdotool key Up".split());
+                                    self.gesture_queue.append("evemu_do Up".split());
                             self.rep_start = float(event["time"]);
                         elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
@@ -300,24 +309,30 @@ class Worker(threading.Thread):
                 if(no_slots == 4):
                     if(self.gesture["type"] == "swipe_horizontal_vertical"):
                         # better to zero out after a gesture is triggered
-                        if(self.gesture["total"]["x-cum"] >= REP_4):
-                            self.gesture_queue.append("xdotool key Right".split());
+                        if(self.gesture["total"]["x-cum"] >= REP_4x):
+                            self.gesture_queue.append("evemu_do Right".split());
                             #self.gesture["total"]["x-cum"] -= REP; #better to zero out
-                            self.gesture["total"]["x-cum"] = 0
-                        if(self.gesture["total"]["x-cum"] <= -REP_4):
-                            self.gesture_queue.append("xdotool key Left".split());
+                            self.gesture["total"]["x-cum"] = 0;
+                            self.gesture["total"]["y-cum"] = 0;
+
+                        if(self.gesture["total"]["x-cum"] <= -REP_4x):
+                            self.gesture_queue.append("evemu_do Left".split());
                             # self.gesture["total"]["x-cum"] += REP;
                             self.gesture["total"]["x-cum"] = 0;
+                            self.gesture["total"]["y-cum"] = 0;
 
                         # y is messured postive when moving down the touchpad
                         if(self.gesture["total"]["y-cum"] >= REP_4):
-                            self.gesture_queue.append("xdotool key Down".split());
+                            self.gesture_queue.append("evemu_do Down".split());
                             #self.gesture["total"]["y-cum"] -= REP;
                             self.gesture["total"]["y-cum"] = 0;
+                            self.gesture["total"]["x-cum"] = 0;
+
                         if(self.gesture["total"]["y-cum"] <= -REP_4):
-                            self.gesture_queue.append("xdotool key Up".split());
+                            self.gesture_queue.append("evemu_do Up".split());
                             #self.gesture["total"]["y-cum"] += REP;
                             self.gesture["total"]["y-cum"] = 0;
+                            self.gesture["total"]["x-cum"] = 0;
 
                     if(self.gesture["type"] == "swipe_diagonal_//"):
                         if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP):
@@ -377,14 +392,11 @@ class Worker(threading.Thread):
                 elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
-                        subprocess.call("evemu_do ctrl+t".split());
+                        subprocess.call("evemu_do ctrl+shift+n".split());
                     if(x_cum >= 0 and y_cum >= 0): #right down
-                        subprocess.call("evemu_do Alt+F4".split());
+                        subprocess.call("save_and_close".split());
 
-                elif(self.gesture["type"] == "swipe_diagonal_//"):
-                    if(x_cum >= 0 and y_cum < 0): #right up
-                        subprocess.call("evemu_do Alt up".split());
-                    if(x_cum < 0 and y_cum >= 0): #left down
+                elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
                         subprocess.call("evemu_do Alt up".split());
 
             if(no_slots == 5):
@@ -393,24 +405,24 @@ class Worker(threading.Thread):
                     os.popen('''bash -c "goldendict \"$(xsel|tr '\n' ' '|sed -r 's/^[^[:alpha:]]*([-[:alpha:]]*).*$/&/')\""'''); #couldn't get subprocess to work on this
                 elif (self.gesture["type"] == "swipe_horizontal"):
                     if(x_cum >= 0):
-                        subprocess.call("xdotool key ctrl+alt+Right".split());
+                        subprocess.Popen("evemu_do ctrl+alt+t".split(), cwd=pathlib.Path.home());
                     else:
-                        subprocess.Popen("emacs".split());
+                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home()); #'' for "" doesn't work as expected
                 elif (self.gesture["type"] == "swipe_vertical"):
                     if(y_cum >= 0):
-                        subprocess.call("xdotool key ctrl+alt+Down".split());
+                        subprocess.Popen("flip".split(), cwd=pathlib.Path.home());
                     else:
-                        subprocess.call("xdotool key ctrl+alt+Up".split());
+                        subprocess.Popen("toggle_global_window_switcher".split(), cwd=pathlib.Path.home());
                 elif (self.gesture["type"] == "swipe_diagonal"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
-                        subprocess.Popen("evemu_do ctrl+alt+t".split());# new terminal window, gnome-terminal kept opening on / directory
+                        subprocess.Popen("evemu_do ctrl+t".split());# new terminal window, gnome-terminal kept opening on / directory
                     if(x_cum >= 0 and y_cum >= 0): #right down
-                        subprocess.Popen("emacs".split());
+                        subprocess.Popen("restartTouchpadAndPen".split(), cwd=pathlib.Path.home());
                     if(x_cum >= 0 and y_cum < 0): #right up
-                        subprocess.Popen("emacs".split());
+                        self.reset();
                     if(x_cum < 0 and y_cum >= 0): #left down
-                        subprocess.Popen("emacs".split());
+                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home());#subprocess.Popen("orientation_swap".split(), cwd=pathlib.Path.home()); #hasn't shown value
 
         # restart debounce
         self.debounce = float(clock);
@@ -420,6 +432,7 @@ class Worker(threading.Thread):
         self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved" : 0, "dis-cum": 0}, "slots" : {} } # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum
         for key in slots:
             self.gesture["slots"][key] = {"x-cum": 0, "y-cum": 0, "moved": 0};
+
 
 
     def finger_remove(self, event):
@@ -440,6 +453,9 @@ class Worker(threading.Thread):
         if(removed_slot in self.status ): #need this because not updating status when finger added (finger is on touchpad) but after finger starts (both x and y are valid)
             del self.status[removed_slot];
             del self.gesture["slots"][removed_slot];
+        
+        self.status_dis = self.max_distance();
+
 
     def update_status(self, slot, new_state, max_dis):
         self.status[slot] = new_state;
@@ -455,6 +471,496 @@ class Worker(threading.Thread):
                 max_dis = max(max_dis, cur_dis)
         return max_dis;
 
+    def reset(self):
+        #reset keyboard state. clear all modifiers and such
+	#reset sticky to remove issues, call() to preserve order. can also just call sticky_keys because currently modded to also refresh
+        subprocess.call("evemu_do Alt up".split());
+        subprocess.call("evemu_do ctrl up".split());
+        subprocess.call("evemu_do shift up".split());
+        subprocess.call("evemu_do super up".split());
+        subprocess.call("xkbset -sticky".split());
+        subprocess.call("xkbset sticky".split());
+
+
+
+# touchscreen centric gesture worker
+class Touch_Screen_Worker(threading.Thread):
+    """ A worker thread that takes directory names from a queue, finds all
+        files in them recursively and reports the result.
+
+        Input is done by placing directory names (as strings) into the
+        Queue passed in dir_q.
+
+        Output is done by placing tuples into the Queue passed in result_q.
+        Each tuple is (thread name, dirname, [list of files]).
+
+        Ask the thread to stop by calling its join() method.
+    """
+    def __init__(self, q):
+        super(Touch_Screen_Worker, self).__init__()
+        self.q = q
+        self.status = {} #slots :   {"id": status_dict[slot]["id"], "x" :x , "y" : y}
+        self.status_dis = 0
+        self.last_gesture_start = -1
+        self.debounce = 0
+        self.gesture_queue = []
+        self.rep_start = 0
+        self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved": 0, "dis-cum": 0} , "slots" : {}} # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum, moved, dis-cum
+
+    def run(self):
+        # As long as we weren't asked to stop, try to take new tasks from the
+        # queue. The tasks are taken with a blocking 'get', so no CPU
+        # cycles are wasted while waiting.
+        # Also, 'get' is given a timeout, so stoprequest is always checked,
+        # even if there's nothing in the queue.
+        while True:
+            # get messages(dequeue from message queue) and do approperate action
+            event = self.q.get(True)
+            #print("def: ", event)
+            if event["type"] == "finger_start":
+                #print("finger_start")
+                self.finger_start(event);
+            if event["type"] == "finger_update":
+                #print("finger_update")
+                #print(event)
+                self.finger_update(event);
+            if event["type"] == "finger_remove":
+                #print("finger_remove")
+                self.finger_remove(event);
+
+            # dequeue from gesture queue and execute after debounce times out
+            if(len(self.gesture_queue) != 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
+                #print("executing")
+                #print(self.gesture_queue)
+                for gesture in self.gesture_queue:
+                    #print(gesture)
+                    subprocess.call(gesture);
+                self.gesture_queue = [];
+
+
+    def finger_start(self, event):
+        """ append new finger to gesture.
+        """
+        # end gesture
+        #self.gesture_end(event["time"]);
+        ## restart debounce
+        self.debounce = float(event["time"]);
+
+        ## restart gesture params
+        slots = self.gesture["slots"];
+        self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved" : 0, "dis-cum": 0},  "slots" : {} } # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum
+        for key in slots:
+            self.gesture["slots"][key] = {"x-cum": 0, "y-cum": 0, "moved": 0};
+
+        #  initiate state for finger
+        slot = event["slot"];
+
+        self.gesture["slots"][slot] = {};
+        self.gesture["slots"][slot]["x-cum"] = 0
+        #self.gesture["slots"][slot]["x-diff"] = 0
+        #self.gesture["slots"][slot]["x"] = self.status[slot]["x"];
+
+        self.gesture["slots"][slot]["y-cum"] = 0
+        #self.gesture["slots"][slot]["y-diff"] = 0
+        #self.gesture["slots"][slot]["y"] = self.status[slot]["y"];
+
+        self.gesture["slots"][slot]["moved"] = 0
+
+        self.update_status(slot, event[slot], 0); #need to wait until status updated before calcing max_dis
+        max_dis =  self.max_distance();
+        self.status_dis =  max_dis;
+        #print(max_dis)
+        #print(self.status);
+
+
+    def finger_update(self, event):
+        """ Update started gesture
+        """
+        # update state for updated finger
+        slot = event["slot"];
+
+        # gesture must be updated before status because need to capture difference between last and now
+        self.gesture["slots"][slot]["x-cum"] +=  event[slot]["x"] - self.status[slot]["x"]
+        #self.gesture["slots"][slot]["x-diff"] = event[slot]["x"] - self.status[slot]["x"]
+        #self.gesture["slots"][slot]["x"] = self.status[slot]["x"];
+
+        self.gesture["slots"][slot]["y-cum"] += event[slot]["y"] - self.status[slot]["y"]
+        #self.gesture["slots"][slot]["y-diff"] = event[slot]["y"] - self.status[slot]["y"]
+        #self.gesture["slots"][slot]["y"] = self.status[slot]["y"];
+
+        self.gesture["total"]["x-cum"] += event[slot]["x"] - self.status[slot]["x"]
+        self.gesture["total"]["y-cum"] += event[slot]["y"] - self.status[slot]["y"]
+
+        max_dis =  self.max_distance();
+        #print(max_dis);
+        #print(self.status_dis);
+        self.gesture["total"]["dis-cum"] += max_dis - self.status_dis;
+
+
+        self.update_status(slot, event[slot],max_dis);
+
+        #print(self.gesture["total"]);
+        #print(self.status_dis);
+
+        # pick which type of guesture is currenlty executing after all fingures have been verified
+        no_slots = len(self.gesture["slots"]);
+        if (not self.gesture["slots"][slot]["moved"]):
+            self.gesture["slots"][slot]["moved"] = self.gesture["slots"][slot]["y-cum"] ** 2 + self.gesture["slots"][slot]["x-cum"] ** 2 > THRESHOLD
+            self.gesture["total"]["moved"] += self.gesture["slots"][slot]["moved"];
+
+        elif (not self.gesture["type"]):
+            # pinch
+            if(self.gesture["total"]["moved"] >= 1):# move out the pinch gesture sutff so that can do gestures when only one finger is moving
+                x_cum = abs(self.gesture["total"]["x-cum"]);
+                y_cum = abs(self.gesture["total"]["y-cum"]);
+                dis_cum =  self.gesture["total"]["dis-cum"];
+
+                #if (x_cum + y_cum > PINCH_DECISION):
+#                if(no_slots == 2):
+#                    #print(f"dis_cum = {dis_cum}")
+#                    #print(f"x_cum + y_cum = {x_cum + y_cum}")
+#                    if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
+#                        self.gesture["type"] = "no_gesture";
+#                    elif(abs(dis_cum) > PINCH_THRESHOLD ):
+#                        self.gesture["type"] = "pinch";
+#                        if(dis_cum > 0): #pinch in
+#                            self.gesture_queue.append("evemu_do control down".split());
+#                            self.gesture_queue.append("evemu_do equal".split()); # in the future maybe get rid of plus or equal
+#                        else: #pinch out
+#                            self.gesture_queue.append("evemu_do control down".split());
+#                            self.gesture_queue.append("evemu_do minus".split());
+#                        self.rep_start = float(event["time"]);
+
+            # swipe            
+            if(no_slots == self.gesture["total"]["moved"]):
+                x_cum = abs(self.gesture["total"]["x-cum"]);
+                y_cum = abs(self.gesture["total"]["y-cum"]);
+                dis_cum =  self.gesture["total"]["dis-cum"];
+                if (x_cum + y_cum > DECISION):
+
+                    if(no_slots == 3):
+                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
+                            self.gesture["type"] = "swipe_horizontal";
+                            self.gesture_queue.append("evemu_do alt down".split());
+                            self.gesture_queue.append("evemu_do tab".split()); # evemu_do alt alt alt tab; works also because fo sticky keys
+                            self.rep_start = float(event["time"]);
+                        elif (y_cum >= x_cum * tan(ANGLE * pi/180)):
+                            self.gesture["type"] = "swipe_vertical";
+                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                            x_cum = self.gesture["total"]["x-cum"];
+                            y_cum = self.gesture["total"]["y-cum"];
+                            if(x_cum * y_cum > 0): #left up, right down
+                                self.gesture["type"] = "swipe_diagonal_\\";
+
+                            if(x_cum * y_cum < 0): #right up
+                                self.gesture["type"] = "swipe_diagonal_//";
+                                self.gesture_queue.append("evemu_do control down".split());
+                                if(x_cum >= 0 and y_cum < 0): #right up
+                                    self.gesture_queue.append("evemu_do Page_Down".split());
+
+                                if(x_cum < 0 and y_cum >= 0): #left down
+                                    self.gesture_queue.append("evemu_do Page_Up".split());
+
+                                self.rep_start = float(event["time"]);
+
+                        else: #fell under CLEARANCE
+                            pass
+                    if(no_slots == 4):
+                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) or y_cum > x_cum * tan(ANGLE * pi/180) ):
+                            self.gesture["type"] = "swipe_horizontal_vertical";
+                            self.gesture_queue.append("evemu_do ctrl+alt down".split()); #xdotool was causing issue when esc was pressed beforehand
+                            if (x_cum > y_cum):
+                                if (self.gesture["total"]["x-cum"] >= 0):
+                                    self.gesture_queue.append("evemu_do Right".split()); #xdotool removed because was hanging on subprocess.call but not subprocess.Popen. p
+                                else:
+                                    self.gesture_queue.append("evemu_do Left".split());
+                            else:
+                                if (self.gesture["total"]["y-cum"] >= 0):
+                                    self.gesture_queue.append("evemu_do Down".split());
+                                else:
+                                    self.gesture_queue.append("evemu_do Up".split());
+                            self.rep_start = float(event["time"]);
+                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                            x_cum = self.gesture["total"]["x-cum"];
+                            y_cum = self.gesture["total"]["y-cum"];
+                            if(x_cum * y_cum > 0): #left up, right down
+                                self.gesture["type"] = "swipe_diagonal_\\";
+
+                            if(x_cum * y_cum < 0): #right up
+                                self.gesture["type"] = "swipe_diagonal_//";
+                                self.gesture_queue.append("evemu_do Alt down".split());
+                                if(x_cum >= 0 and y_cum < 0): #right up
+                                    self.gesture_queue.append("evemu_do Right".split());
+
+                                if(x_cum < 0 and y_cum >= 0): #left down
+                                    self.gesture_queue.append("evemu_do Left".split());
+
+                                self.rep_start = float(event["time"]);
+
+                    if(no_slots == 5):
+                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
+                            self.gesture["type"] = "swipe_horizontal";
+                        elif (y_cum > x_cum * tan(ANGLE * pi/180)):
+                            self.gesture["type"] = "swipe_vertical";
+                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                            self.gesture["type"] = "swipe_diagonal";
+
+                    # reset because don't want to trigger again in
+                    if(self.gesture["type"]):
+                        self.gesture["total"]["x-cum"] = 0;
+                        self.gesture["total"]["y-cum"] = 0;
+                        self.gesture["total"]["dis-cum"] = 0;
+        # inqueue gesture to run
+        else:
+            if(float(event["time"]) - self.rep_start < REP_THRES): # to remove extra movement caused by movement before RE_THRES has been crossed
+                self.gesture["total"]["x-cum"] = 0;
+                self.gesture["total"]["y-cum"] = 0;
+                self.gesture["total"]["dis-cum"] = 0;
+            else:
+                dis_cum =  self.gesture["total"]["dis-cum"];
+#                if(no_slots == 2):                              
+#                   if(self.gesture["type"] == "pinch"):
+#                       if(abs(dis_cum) > PINCH_REP):
+#                           if(dis_cum > 0): #pinch in
+#                               self.gesture_queue.append("evemu_do equal".split()); # in the future maybe get rid of plus or equal
+#                           else: #pinch out
+#                               self.gesture_queue.append("evemu_do minus".split());
+#
+#                           self.gesture["total"]["dis-cum"] = 0;
+#
+                if(no_slots == 3):
+                    if(self.gesture["type"] == "swipe_horizontal"):
+                        # better to zero out after a gesture is triggered
+                        if(self.gesture["total"]["x-cum"] >= REP_3):
+                            self.gesture_queue.append("evemu_do RIGHT".split());
+                            #self.gesture["total"]["x-cum"] -= REP; #better to zero out
+                            self.gesture["total"]["x-cum"] = 0
+                        if(self.gesture["total"]["x-cum"] <= -REP_3):
+                            self.gesture_queue.append("evemu_do LEFT".split());
+                            #self.gesture["total"]["x-cum"] += REP;
+                            self.gesture["total"]["x-cum"] = 0;
+
+                        # y is messured postive when moving down the touchpad
+                        if(self.gesture["total"]["y-cum"] >= REP_3):
+                            self.gesture_queue.append("evemu_do DOWN".split());
+                            #self.gesture["total"]["y-cum"] -= REP;
+                            self.gesture["total"]["y-cum"] = 0;
+                        if(self.gesture["total"]["y-cum"] <= -REP_3):
+                            self.gesture_queue.append("evemu_do UP".split());
+                            #self.gesture["total"]["y-cum"] += REP;
+                            self.gesture["total"]["y-cum"] = 0;
+
+                    if(self.gesture["type"] == "swipe_diagonal_//"):
+                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP):
+                            self.gesture_queue.append("evemu_do Page_Down".split());
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+
+                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP):
+                            self.gesture_queue.append("evemu_do Page_Up".split());
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+                            #self.gesture["total"]["y-cum"] = 0;
+
+                if(no_slots == 4):
+                    if(self.gesture["type"] == "swipe_horizontal_vertical"):
+                        # better to zero out after a gesture is triggered
+                        if(self.gesture["total"]["x-cum"] >= REP_4x):
+                            self.gesture_queue.append("evemu_do Right".split());
+                            #self.gesture["total"]["x-cum"] -= REP; #better to zero out
+                            self.gesture["total"]["x-cum"] = 0;
+                            self.gesture["total"]["y-cum"] = 0;
+
+                        if(self.gesture["total"]["x-cum"] <= -REP_4x):
+                            self.gesture_queue.append("evemu_do Left".split());
+                            # self.gesture["total"]["x-cum"] += REP;
+                            self.gesture["total"]["x-cum"] = 0;
+                            self.gesture["total"]["y-cum"] = 0;
+
+                        # y is messured postive when moving down the touchpad
+                        if(self.gesture["total"]["y-cum"] >= REP_4):
+                            self.gesture_queue.append("evemu_do Down".split());
+                            #self.gesture["total"]["y-cum"] -= REP;
+                            self.gesture["total"]["y-cum"] = 0;
+                            self.gesture["total"]["x-cum"] = 0;
+
+                        if(self.gesture["total"]["y-cum"] <= -REP_4):
+                            self.gesture_queue.append("evemu_do Up".split());
+                            #self.gesture["total"]["y-cum"] += REP;
+                            self.gesture["total"]["y-cum"] = 0;
+                            self.gesture["total"]["x-cum"] = 0;
+
+                    if(self.gesture["type"] == "swipe_diagonal_//"):
+                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP):
+                            self.gesture_queue.append("evemu_do Right".split());
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+
+                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP):
+                            self.gesture_queue.append("evemu_do Left".split());
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+                            #self.gesture["total"]["y-cum"] = 0;
+
+        #print(self.gesture_queue)
+        #print(self.gesture)
+
+
+    def gesture_end(self, clock):
+        """ end started gesture and reset gesture.
+        """
+        # signify end of a started gesture
+        self.gesture_queue = [];
+        x_cum = self.gesture["total"]["x-cum"];
+        y_cum = self.gesture["total"]["y-cum"];
+        no_slots = len(self.gesture["slots"]);
+        #print(self.gesture);
+        if (float(clock) - self.debounce >= DEBOUNCE):
+            if(no_slots == 2):
+                if(self.gesture["type"] == "pinch"):
+                    subprocess.call("evemu_do ctrl up".split());
+
+            if(no_slots == 3):
+                if (self.gesture["type"] == "swipe_horizontal"):
+                    #print("end 3 finger swipe_hor")
+                    subprocess.call("evemu_do alt up".split());
+                elif (self.gesture["type"] == "swipe_vertical"):
+                    #print("swipe_ver")
+                    subprocess.call("evemu_do super+i".split());
+
+                elif(self.gesture["type"] == "swipe_diagonal_\\"):
+                    if(x_cum < 0 and y_cum < 0): #left up
+                        #print("left up")
+                        subprocess.call("evemu_do ctrl+shift+t".split());
+                    if(x_cum >= 0 and y_cum >= 0): #right down
+                        subprocess.call("evemu_do ctrl+w".split());
+
+                elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
+                    subprocess.call("evemu_do control up".split());
+
+            if(no_slots == 4):
+                if (not self.gesture["type"]):
+                    #print("4 finger tap");
+                    subprocess.call("evemu_do super+w".split());
+                elif (self.gesture["type"] == "swipe_horizontal_vertical"):
+                        subprocess.call("evemu_do ctrl+alt up".split()); #xdo_tool was causing issues with ESC
+
+                elif(self.gesture["type"] == "swipe_diagonal_\\"):
+                    if(x_cum < 0 and y_cum < 0): #left up
+                        #print("left up")
+                        subprocess.call("evemu_do ctrl+shift+n".split());
+                    if(x_cum >= 0 and y_cum >= 0): #right down
+                        subprocess.call("save_and_close".split());
+
+                elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
+                        subprocess.call("evemu_do Alt up".split());
+
+            if(no_slots == 5):
+                if (not self.gesture["type"]):
+                    #print("5 finger tap");
+                    os.popen('''bash -c "goldendict \"$(xsel|tr '\n' ' '|sed -r 's/^[^[:alpha:]]*([-[:alpha:]]*).*$/&/')\""'''); #couldn't get subprocess to work on this
+                elif (self.gesture["type"] == "swipe_horizontal"):
+                    if(x_cum >= 0):
+                        subprocess.Popen("evemu_do ctrl+alt+t".split(), cwd=pathlib.Path.home());
+                    else:
+                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home()); #'' for "" doesn't work as expected
+                elif (self.gesture["type"] == "swipe_vertical"):
+                    if(y_cum >= 0):
+                        subprocess.Popen("flip".split(), cwd=pathlib.Path.home());
+                    else:
+                        subprocess.Popen("toggle_global_window_switcher".split(), cwd=pathlib.Path.home());
+                elif (self.gesture["type"] == "swipe_diagonal"):
+                    if(x_cum < 0 and y_cum < 0): #left up
+                        #print("left up")
+                        subprocess.Popen("evemu_do ctrl+t".split());# new terminal window, gnome-terminal kept opening on / directory
+                    if(x_cum >= 0 and y_cum >= 0): #right down
+                        subprocess.Popen("restartTouchpadAndPen".split(), cwd=pathlib.Path.home());
+                    if(x_cum >= 0 and y_cum < 0): #right up
+                        self.reset();
+                    if(x_cum < 0 and y_cum >= 0): #left down
+                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home());#subprocess.Popen("orientation_swap".split(), cwd=pathlib.Path.home()); #hasn't shown value
+
+        # restart debounce
+        self.debounce = float(clock);
+
+        # restart gesture params
+        slots = self.gesture["slots"];
+        self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved" : 0, "dis-cum": 0}, "slots" : {} } # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum
+        for key in slots:
+            self.gesture["slots"][key] = {"x-cum": 0, "y-cum": 0, "moved": 0};
+
+
+
+    def finger_remove(self, event):
+        """remove status and gesture of removed finger.
+        """
+
+        # execute tap based gesture if any other gesture had not been started
+        if(len(self.gesture_queue) == 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
+            # do tap gesture according to finger
+            pass;
+
+        # end gesture
+        self.gesture_end(event["time"]);
+
+        # update state
+        removed_slot = event["removed_slot"];
+
+        if(removed_slot in self.status ): #need this because not updating status when finger added (finger is on touchpad) but after finger starts (both x and y are valid)
+            del self.status[removed_slot];
+            del self.gesture["slots"][removed_slot];
+        
+        self.status_dis = self.max_distance();
+
+
+    def update_status(self, slot, new_state, max_dis):
+        self.status[slot] = new_state;
+        self.status_dis = max_dis;
+        #print(self.status);
+
+    def max_distance(self):
+        #return max distance between fingers
+        max_dis = 0
+        for fin1 in self.status:
+            for fin2 in self.status:
+                cur_dis = round(((self.status[fin1]["x"] - self.status[fin2]["x"])**2 + (self.status[fin1]["y"] - self.status[fin2]["y"])**2) ** (1/2))
+                max_dis = max(max_dis, cur_dis)
+        return max_dis;
+
+    def reset(self):
+        #reset keyboard state. clear all modifiers and such
+	#reset sticky to remove issues, call() to preserve order. can also just call sticky_keys because currently modded to also refresh
+        subprocess.call("evemu_do Alt up".split());
+        subprocess.call("evemu_do ctrl up".split());
+        subprocess.call("evemu_do shift up".split());
+        subprocess.call("evemu_do super up".split());
+        subprocess.call("xkbset -sticky".split());
+        subprocess.call("xkbset sticky".split());
+
+
+# define and start gestures  
+
+# N: Name="ipts 1B96:005E"
+# P: Phys=heci3
+# S: Sysfs=/devices/pci0000:00/0000:00:16.4/mei::3e8d0870-271a-4208-8eb5-9acb9402ae04:0F/0044:1B96:005E.0007/input/input32
+# U: Uniq=
+# H: Handlers=mouse4 event26 
+# B: PROP=2
+# B: EV=1b
+# B: KEY=400 0 0 0 0 0
+# B: ABS=32f3800000000003
+# B: MSC=20
+# --
+# N: Name="Microsoft Surface Keyboard Touchpad"
+# P: Phys=usb-0000:00:14.0-1.4/input0
+# S: Sysfs=/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1.4/1-1.4:1.0/0003:045E:07CD.0012/input/input89
+# U: Uniq=
+# H: Handlers=mouse1 event6 
+# B: PROP=5
+# B: EV=1b
+# B: KEY=e520 10000 0 0 0 0
+# B: ABS=260800000000003
+# B: MSC=20
 
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
@@ -464,18 +970,23 @@ def main():
     for device_event in filter_result:
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]
-        threading.Thread(target=test, args=[device_event_name, 1]).start() #change here to use evemu-record
+        threading.Thread(target=test, args=[device_event_name, 1, device]).start() #change here to use evemu-record
 
     device = "touchscreen"
     result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
+        device = "400 0 0 0 0 0"
+        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
+        filter_result = list(filter(lambda x: x.find("event") != -1,result))
+
     for device_event in filter_result:
        device_event_index = device_event.find("event")
        device_event_name = device_event[device_event_index:]
-       threading.Thread(target=test, args=[device_event_name, 6]).start() #change here to use evemu-record
+       threading.Thread(target=test, args=[device_event_name, 2, device]).start() #change here to use evemu-record
     return 1;
 
-def test(device_event_name, factor):
+def test(device_event_name, factor, dev):
     #make sure to start with a single finger when the base re-attaches because slot and tracking id won't fire before position
     status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
     slot = "0"
@@ -483,9 +994,20 @@ def test(device_event_name, factor):
 
     # queue and worker
     q = queue.Queue()
-    w = Worker(q)
+    if (dev ==  "touchpad"):
+        w = Worker(q)
+    else: 
+        w = Touch_Screen_Worker(q)
     w.start()
 
+    # orientation, emplementing x and y swap takes a bit more of work
+    orientation = subprocess.getoutput("orientation");
+    print(orientation);
+    orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
+    orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
+    
+    swap_x_y = True if("right" == orientation or "left" == orientation) else False;
+    #print(swap_x_y)
     cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
 
     for line in cmd.stdout:
@@ -525,14 +1047,22 @@ def test(device_event_name, factor):
             slot = state
 
         if "(ABS_MT_POSITION_X)," == event:
-            status_dict[slot]["x"] = float(state) / factor;
-            status_dict[slot]["x_updated"] += 1;
+            if(swap_x_y):
+               status_dict[slot]["y"] = float(state) / factor * orientation_y;
+               status_dict[slot]["y_updated"] += 1;
+            else: 
+               status_dict[slot]["x"] = float(state) / factor * orientation_x;
+               status_dict[slot]["x_updated"] += 1;
             update = True;
 
         if "(ABS_MT_POSITION_Y)," == event:
-            status_dict[slot]["y"] = float(state) / factor;
-            status_dict[slot]["y_updated"] += 1;
-            update = True;
+           if(swap_x_y):
+               status_dict[slot]["x"] = float(state) / factor * orientation_x;
+               status_dict[slot]["x_updated"] += 1;
+           else:
+               status_dict[slot]["y"] = float(state) / factor * orientation_y;
+               status_dict[slot]["y_updated"] += 1;
+           update = True;
 
         # if "(ABS_X)," == event:
         #     x1 = int(state)
@@ -565,7 +1095,14 @@ def test(device_event_name, factor):
             q.put({"type": finger_type, "slot": slot, "time": time, slot: {"id": status_dict[slot]["id"], "x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
 
         #print(f"time = {time}, state = {state}, event = {event}")
-
-
 if __name__ == "__main__":
-    main()
+    import sys
+    # if call comes with arguments, pass only the first one. if it doesn't, start normal orientation operation
+    # maybe implement builtin daemonization
+    if len(sys.argv) > 1:
+        main()
+    else:
+        subprocess.Popen(["daemonize", sys.argv[0], "execute"])
+
+
+
