@@ -11,6 +11,7 @@
 - I felt shackled by one-shot gestures from [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] but from it I found the utility of eight-directional gestures.
 - I felt [[https://github.com/iberianpig/fusuma][fusuma]] was lacking Although it was more fluid.
 - I really missed keeping my fingers moving across the touchpad to switch applications. 
+- I wanted tap gestures.
 - I wanted five finger gestures. 
 - I wanted usable gestures for my touchscreen.
 So I wrote this.
