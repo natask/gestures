@@ -1,0 +1,101 @@
+* Motivation 
+:PROPERTIES:
+:ID:       d6ce66b4-caba-44f0-83a1-016c386249fa
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 03:02:06]
+:END:
+I wanted an application that will allow me to fluidly express my intent through the touch-pad and touchscreen. 
+I felt shackled by one-shot gestures from [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] but from it I found the utility of eight-directional gestures.
+I felt [[https://github.com/iberianpig/fusuma][fusuma]] was lacking Although it was more fluid.
+I really missed keeping my fingers moving across the touch-pad to switch applications. 
+I wanted five finger gestures. 
+I wanted usable gestures for my touchscreen.
+
+So I wrote this.
+
+
+* Dependencies 
+:PROPERTIES:
+:ID:       96ea91ca-f6d0-47f2-bdaa-52dd6903122b
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 04:10:31]
+:END:
+- python dependencies ::
+  subprocess, pathlib, shlex, threading, queue, time, os, sys, math
+- *nix dependencies ::
+  cat, grep
+- dependencies ::
+  stdbuf, evtest
+  - evtest ::
+    will maybe replaced by evemu-record in the future.
+  - daemonize ::
+    using =& disown= should work as well but this is a sure way to detach and run this on a global scale.
+- default dependencies (if running default configuration) :: 
+  - evemu ::
+    need evemu-do (alternative to xdotool that I wrote) in $PATH.
+
+* Alternatives 
+:PROPERTIES:
+:ID:       480d65ce-33d2-4222-9098-ffee46f42019
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 03:16:58]
+:END:
+- [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] ::
+  - what I used to use. 
+  - Works well, just that the gestures are one-shot, meaning that the command attached to a gesture is executed only once per full swipe. 
+  - depends on libinput. 
+- [[https://github.com/iberianpig/fusuma][fusuma]] ::
+  - Although it doesn't have one-shot limitation, it didn't support commands to run when the gesture begins and ends. This is useful for use-cases like switching applications which require alt-down to be pressed.
+  - didn't support eight-directional gestures.
+
+* TODOS 
+:PROPERTIES:
+:ID:       a0f0322f-5cee-46b0-acb1-82c5122bf600
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 03:06:38]
+:END:
+** TODO add customization [0/4]
+:PROPERTIES:
+:ID:       3bc8e684-d676-46fc-b972-7b9226d417f6
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- State "TODO"       from              [2020-01-17 Fri 03:07:08]
+- Newly Created           [2020-01-17 Fri 03:06:59]
+:END:
+- [ ] enable customization by refactoring code.
+- [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
+- [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
+
+** TODO enrich readme  
+:PROPERTIES:
+:ID:       2f6a4067-3cd9-42ca-8003-64f5ca0f471d
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-01-17 Fri 03:15:49]
+:END:
+** TODO Write script to fulfill dependencies automatically 
+:PROPERTIES:
+:ID:       6ed1e765-e89b-4649-be07-a95c3895698e
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- State "TODO"       from              [2020-01-17 Fri 04:26:33]
+- Newly Created           [2020-01-17 Fri 04:26:25]
+:END:
