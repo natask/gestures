@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Motivation](#orgce26de9)
-2.  [Features](#org5745965)
-3.  [Dependencies](#org4dff78e)
-4.  [Alternatives](#org726f02d)
-5.  [TODOS](#org67c2a7e)
-    1.  [add customization <code>[0/4]</code>](#org08d8912)
-    2.  [enrich readme](#orgd256ec7)
-    3.  [Write script to fulfill dependencies automatically](#orge2d9e2a)
+1.  [Motivation](#org05f04e7)
+2.  [Features](#orge7e1874)
+3.  [Dependencies](#orgdd2104f)
+4.  [Alternatives](#org05e5cc0)
+5.  [TODOS](#org4b2432f)
+    1.  [add customization <code>[0/4]</code>](#orge49f7ef)
+    2.  [enrich readme](#org9785687)
+    3.  [Write script to fulfill dependencies automatically](#org2f22ab7)
 
-![](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
+![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="orgce26de9"></a>
+<a id="org05f04e7"></a>
 
 # Motivation
 
@@ -28,7 +28,7 @@
 So I wrote this.
 
 
-<a id="org5745965"></a>
+<a id="orge7e1874"></a>
 
 # Features
 
@@ -55,7 +55,7 @@ For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, 
 to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 
 
-<a id="org4dff78e"></a>
+<a id="orgdd2104f"></a>
 
 # Dependencies
 
@@ -67,7 +67,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org726f02d"></a>
+<a id="org05e5cc0"></a>
 
 # Alternatives
 
@@ -78,13 +78,13 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="org67c2a7e"></a>
+<a id="org4b2432f"></a>
 
 # TODOS
 
 
 
-<a id="org08d8912"></a>
+<a id="orge49f7ef"></a>
 
 ## TODO add customization <code>[0/4]</code>
 
@@ -93,12 +93,12 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="orgd256ec7"></a>
+<a id="org9785687"></a>
 
 ## TODO enrich readme
 
 
-<a id="orge2d9e2a"></a>
+<a id="org2f22ab7"></a>
 
 ## TODO Write script to fulfill dependencies automatically
 

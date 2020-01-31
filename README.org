@@ -76,10 +76,12 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 - Newly Created           [2020-01-17 Fri 03:16:58]
 :END:
 - [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] ::
+
   - what I used to use. 
   - Works well, just that the gestures are one-shot, meaning that the command attached to a gesture is executed only once per full swipe. 
   - depends on libinput. 
 - [[https://github.com/iberianpig/fusuma][fusuma]] ::
+     
   - Although it doesn't have one-shot limitation, it didn't support commands to run when the gesture begins and ends. This is useful for use-cases like switching applications which require alt-down to be pressed.
   - didn't support eight-directional gestures.
 
