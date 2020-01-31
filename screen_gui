@@ -6,9 +6,15 @@ import threading
 
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT. 
 def main():
+
     device = "touchscreen"
     result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
+    if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
+        device = "400 0 0 0 0 0"
+        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
+        filter_result = list(filter(lambda x: x.find("event") != -1,result))
+
     for device_event in filter_result:
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]

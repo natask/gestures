@@ -44,8 +44,8 @@ def test(device_event_name):
 
     status_dict = {}
     slot = "0"
-    RADIUS = 135 #this is actually half of the radius of the circle
-    FONT_SIZE = 12
+    RADIUS = 50 #135 #this is actually half of the radius of the circle
+    FONT_SIZE = 6 #12
     update = False
 
     cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
@@ -80,12 +80,12 @@ def test(device_event_name):
             slot = state
 
         if "(ABS_MT_POSITION_X)," == event:
-            status_dict[slot]["x"] = int(state);
+            status_dict[slot]["x"] = float(state)/3;#int(state);
             status_dict[slot]["x_updated"] += 1;
             update = True;
 
         if "(ABS_MT_POSITION_Y)," == event:
-            status_dict[slot]["y"] = int(state);
+            status_dict[slot]["y"] = float(state)/3;#int(state);
             status_dict[slot]["y_updated"] += 1;
             update = True;
 

@@ -1,3 +1,6 @@
+#+CAPTION: demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
+[[file:gestures.gif]]
+
 * Motivation 
 :PROPERTIES:
 :ID:       d6ce66b4-caba-44f0-83a1-016c386249fa
