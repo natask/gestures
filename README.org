@@ -127,3 +127,14 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 - State "TODO"       from              [2020-01-17 Fri 04:26:33]
 - Newly Created           [2020-01-17 Fri 04:26:25]
 :END:
+** TODO Implement C++ version
+:PROPERTIES:
+:ID:       6fd1e765-e89b-4649-be07-a95c3895698e
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- State "TODO"       from              [2020-02-03 Mon 04:26:33]
+- Newly Created           [2020-02-03 Mon 04:26:25]
+:END:
+

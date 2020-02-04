@@ -1,19 +1,20 @@
 
 # Table of Contents
 
-1.  [Motivation](#org05f04e7)
-2.  [Features](#orge7e1874)
-3.  [Dependencies](#orgdd2104f)
-4.  [Alternatives](#org05e5cc0)
-5.  [TODOS](#org4b2432f)
-    1.  [add customization <code>[0/4]</code>](#orge49f7ef)
-    2.  [enrich readme](#org9785687)
-    3.  [Write script to fulfill dependencies automatically](#org2f22ab7)
+1.  [Motivation](#orgf77ed45)
+2.  [Features](#org91966b3)
+3.  [Dependencies](#orged805d9)
+4.  [Alternatives](#orgf5416b5)
+5.  [TODOS](#org282071f)
+    1.  [add customization <code>[0/4]</code>](#orgcd20eb6)
+    2.  [enrich readme](#orgc8c836b)
+    3.  [Write script to fulfill dependencies automatically](#orgd669072)
+    4.  [Implement C++ version](#org5dc67e9)
 
 ![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="org05f04e7"></a>
+<a id="orgf77ed45"></a>
 
 # Motivation
 
@@ -28,7 +29,7 @@
 So I wrote this.
 
 
-<a id="orge7e1874"></a>
+<a id="org91966b3"></a>
 
 # Features
 
@@ -55,7 +56,7 @@ For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, 
 to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 
 
-<a id="orgdd2104f"></a>
+<a id="orged805d9"></a>
 
 # Dependencies
 
@@ -67,7 +68,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org05e5cc0"></a>
+<a id="orgf5416b5"></a>
 
 # Alternatives
 
@@ -78,13 +79,13 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="org4b2432f"></a>
+<a id="org282071f"></a>
 
 # TODOS
 
 
 
-<a id="orge49f7ef"></a>
+<a id="orgcd20eb6"></a>
 
 ## TODO add customization <code>[0/4]</code>
 
@@ -93,12 +94,17 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="org9785687"></a>
+<a id="orgc8c836b"></a>
 
 ## TODO enrich readme
 
 
-<a id="org2f22ab7"></a>
+<a id="orgd669072"></a>
 
 ## TODO Write script to fulfill dependencies automatically
+
+
+<a id="org5dc67e9"></a>
+
+## TODO Implement C++ version
 

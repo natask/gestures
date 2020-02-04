@@ -33,6 +33,7 @@ def create_circle_and_text(x, y, r, id, slot, font_size, canvasName): #center co
 
 def test(device_event_name):
     root = Tk()
+    root.title("touchpad tracker")
     myCanvas = Canvas(root,width=2020,height=1321)
     myCanvas.pack()
 

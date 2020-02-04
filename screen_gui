@@ -40,6 +40,7 @@ def create_circle_and_text(x, y, r, id, slot, font_size, canvasName): #center co
 
 def test(device_event_name):
     root = Tk()
+    root.title('touchscreen tracker')
     #myCanvas = Canvas(root,width=2020,height=1321)
     myCanvas = Canvas(root, width=1600,height=1200) #9600,7200   
     myCanvas.pack()
