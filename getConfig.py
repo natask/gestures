@@ -24,9 +24,9 @@ def get_conf(conffile):
                     num, conffile, line, errmsg))        
         return(json.loads(json_string))
 
-print(all_commands)
-all_commands = get_conf("test.conf")
-print(all_commands)
+# print(all_commands)
+# all_commands = get_conf("test.conf")
+# print(all_commands)
 
 
 #making this for this to be compatable with libinput-gestures

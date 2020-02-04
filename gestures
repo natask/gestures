@@ -6,6 +6,7 @@ import queue
 import time
 import os
 import sys
+import getConfig 
 from math import tan
 from math import pi
 
@@ -26,6 +27,7 @@ REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes oversteppi
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
+all_gestures = getConfig.get_conf(os.path.expanduser("~/new_finger_dir/test.conf"))
 
 # touchpad centric gesture worker
 class Worker(threading.Thread):
@@ -181,13 +183,15 @@ class Worker(threading.Thread):
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
                 if (x_cum + y_cum > DECISION):
-
                     if(no_slots == 3):
                         if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal";
-                            self.gesture_queue.append("evemu_do alt down".split());
-                            self.gesture_queue.append("evemu_do tab".split()); # evemu_do alt alt alt tab; works also because fo sticky keys
                             self.rep_start = float(event["time"]);
+                            #print(all_gestures["swipe"]['3']['l']['start']);
+                            if(self.gesture["total"]["x-cum"] <= 0) :
+                                self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['l']['start']));
+                            else :
+                                self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['r']['start']));
                         elif (y_cum >= x_cum * tan(ANGLE * pi/180)):
                             self.gesture["type"] = "swipe_vertical";
                         elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
@@ -1002,7 +1006,7 @@ def test(device_event_name, factor, dev):
 
     # orientation, emplementing x and y swap takes a bit more of work
     orientation = subprocess.getoutput("orientation");
-    print(orientation);
+    #print(orientation);
     orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
     orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
     
