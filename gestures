@@ -27,7 +27,7 @@ REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes oversteppi
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
-all_gestures = getConfig.get_conf(os.path.expanduser("~/new_finger_dir/test.conf"))
+all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
 # touchpad centric gesture worker
 class Worker(threading.Thread):
