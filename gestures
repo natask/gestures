@@ -432,19 +432,17 @@ class Worker(threading.Thread):
 
                 elif (self.gesture["type"] == "swipe_vertical"):
                     #print("swipe_ver")
-                    if(y_cum >= 0):
+                    if(y_cum <= 0):
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['u']['end']));
                     else:
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['d']['end']));
 
-                elif(self.gesture["type"] == "swipe_diagonal_\\"):
+                elif(self.gesture["type"] == "swipe_diagonal"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['rd']['end']));
-
-                elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
 
                     if(x_cum < 0 and y_cum >= 0): #left down
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['ld']['end'])); #subprocess.Popen("orientation_swap".split(), cwd=pathlib.Path.home()); #hasn't shown value
