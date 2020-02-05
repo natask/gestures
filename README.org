@@ -1,6 +1,6 @@
+
 #+CAPTION: demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
 [[file:gestures.gif]]
-
 * Motivation 
 :PROPERTIES:
 :ID:       d6ce66b4-caba-44f0-83a1-016c386249fa
@@ -66,6 +66,28 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
   - evemu ::
     need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
+* Installation/Uninstallation
+:PROPERTIES:
+:ID:       58e8054c-7787-4e3c-ba56-434ae32a4741
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
+- Newly Created           [2020-02-04 Tue 21:35:57]
+:END:
+:NOTES:
+- installation ::
+  
+  - run ./install.sh
+    - it should handle most things.
+    - may need to install =daemonize= by hand. If on Arch, I recommend =daemonize-git= from AUR.
+    - may want to look at where it places things and if that meets your setup.
+- uninstallation ::
+  
+  - run ./uninstall.sh
+  - removes everything except that what was installed by the package manager. To uninstall those, remove =evtest= and =daemonize=.
+:END:
 * Alternatives 
 :PROPERTIES:
 :ID:       480d65ce-33d2-4222-9098-ffee46f42019
@@ -76,12 +98,12 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 - Newly Created           [2020-01-17 Fri 03:16:58]
 :END:
 - [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] ::
-
+  
   - what I used to use. 
   - Works well, just that the gestures are one-shot, meaning that the command attached to a gesture is executed only once per full swipe. 
   - depends on libinput. 
 - [[https://github.com/iberianpig/fusuma][fusuma]] ::
-     
+  
   - Although it doesn't have one-shot limitation, it didn't support commands to run when the gesture begins and ends. This is useful for use-cases like switching applications which require alt-down to be pressed.
   - didn't support eight-directional gestures.
 
@@ -94,7 +116,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:06:38]
 :END:
-** TODO add customization [0/4]
+** NEXT add customization [0/3]
 :PROPERTIES:
 :ID:       3bc8e684-d676-46fc-b972-7b9226d417f6
 :END:
@@ -104,11 +126,17 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 - State "TODO"       from              [2020-01-17 Fri 03:07:08]
 - Newly Created           [2020-01-17 Fri 03:06:59]
 :END:
-- [ ] enable customization by refactoring code.
+- [-] enable customization by refactoring code.
+  - [X] commands for gesture start
+  - [ ] commands for gesture update
+  - [ ] commands for gesture end
+  - [ ] rep rate
+  - [ ] detach implementation from personal workflow
 - [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
 - [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
 
-** TODO enrich readme  
+** DONE enrich readme  
+CLOSED: [2020-02-04 Tue 23:35:13]
 :PROPERTIES:
 :ID:       2f6a4067-3cd9-42ca-8003-64f5ca0f471d
 :END:
@@ -117,7 +145,8 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:15:49]
 :END:
-** TODO Write script to fulfill dependencies automatically 
+** DONE Write script to fulfill dependencies automatically 
+CLOSED: [2020-02-04 Tue 23:35:22]
 :PROPERTIES:
 :ID:       6ed1e765-e89b-4649-be07-a95c3895698e
 :END:

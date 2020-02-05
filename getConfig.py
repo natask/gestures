@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import sys
 # Table of configuration commands
 # https://stackoverflow.com/questions/19328605/update-values-for-multiple-keys-in-python
 

@@ -1,20 +1,21 @@
 
 # Table of Contents
 
-1.  [Motivation](#orgf77ed45)
-2.  [Features](#org91966b3)
-3.  [Dependencies](#orged805d9)
-4.  [Alternatives](#orgf5416b5)
-5.  [TODOS](#org282071f)
-    1.  [add customization <code>[0/4]</code>](#orgcd20eb6)
-    2.  [enrich readme](#orgc8c836b)
-    3.  [Write script to fulfill dependencies automatically](#orgd669072)
-    4.  [Implement C++ version](#org5dc67e9)
+1.  [Motivation](#org3ed3e14)
+2.  [Features](#org76909f7)
+3.  [Dependencies](#org50fa07c)
+4.  [Installation/Uninstallation](#org6e9b870)
+5.  [Alternatives](#org978a4f0)
+6.  [TODOS](#orge02d31b)
+    1.  [add customization <code>[0/3]</code>](#org66d74b2)
+    2.  [enrich readme](#org0284234)
+    3.  [Write script to fulfill dependencies automatically](#orga5c4f06)
+    4.  [Implement C++ version](#org96f0297)
 
 ![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="orgf77ed45"></a>
+<a id="org3ed3e14"></a>
 
 # Motivation
 
@@ -29,7 +30,7 @@
 So I wrote this.
 
 
-<a id="org91966b3"></a>
+<a id="org76909f7"></a>
 
 # Features
 
@@ -56,7 +57,7 @@ For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, 
 to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 
 
-<a id="orged805d9"></a>
+<a id="org50fa07c"></a>
 
 # Dependencies
 
@@ -68,7 +69,19 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="orgf5416b5"></a>
+<a id="org6e9b870"></a>
+
+# Installation/Uninstallation
+
+-   **installation:** -   run ./install.sh
+        -   it should handle most things.
+        -   may need to install `daemonize` by hand. If on Arch, I recommend `daemonize-git` from AUR.
+        -   may want to look at where it places things and if that meets your setup.
+-   **uninstallation:** -   run ./uninstall.sh
+    -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
+
+
+<a id="org978a4f0"></a>
 
 # Alternatives
 
@@ -79,32 +92,37 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="org282071f"></a>
+<a id="orge02d31b"></a>
 
 # TODOS
 
 
 
-<a id="orgcd20eb6"></a>
+<a id="org66d74b2"></a>
 
-## TODO add customization <code>[0/4]</code>
+## NEXT add customization <code>[0/3]</code>
 
--   [ ] enable customization by refactoring code.
+-   [-] enable customization by refactoring code.
+    -   [X] commands for gesture start
+    -   [ ] commands for gesture update
+    -   [ ] commands for gesture end
+    -   [ ] rep rate
+    -   [ ] detach implementation from personal workflow
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="orgc8c836b"></a>
+<a id="org0284234"></a>
 
-## TODO enrich readme
-
-
-<a id="orgd669072"></a>
-
-## TODO Write script to fulfill dependencies automatically
+## DONE enrich readme
 
 
-<a id="org5dc67e9"></a>
+<a id="orga5c4f06"></a>
+
+## DONE Write script to fulfill dependencies automatically
+
+
+<a id="org96f0297"></a>
 
 ## TODO Implement C++ version
 

@@ -1,0 +1,8 @@
+cat
+grep
+stdbuf
+evtest
+evemu
+daemonize
+pip3
+python3
