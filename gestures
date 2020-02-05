@@ -170,11 +170,9 @@ class Worker(threading.Thread):
                     elif(abs(dis_cum) > PINCH_THRESHOLD ):
                         self.gesture["type"] = "pinch";
                         if(dis_cum > 0): #pinch in
-                            self.gesture_queue.append("evemu_do control down".split());
-                            self.gesture_queue.append("evemu_do equal".split()); # in the future maybe get rid of plus or equal
+                            self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["pinch"]['2']['i']['start']));
                         else: #pinch out
-                            self.gesture_queue.append("evemu_do control down".split());
-                            self.gesture_queue.append("evemu_do minus".split());
+                            self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["pinch"]['2']['o']['start']));
                         self.rep_start = float(event["time"]);
 
             # swipe            
@@ -194,21 +192,29 @@ class Worker(threading.Thread):
                                 self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['r']['start']));
                         elif (y_cum >= x_cum * tan(ANGLE * pi/180)):
                             self.gesture["type"] = "swipe_vertical";
+                            if(self.gesture["total"]["y-cum"] <= 0) :
+                                self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['u']['start']));
+                            else :
+                                self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['d']['start']));
                         elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
                             y_cum = self.gesture["total"]["y-cum"];
                             if(x_cum * y_cum > 0): #left up, right down
                                 self.gesture["type"] = "swipe_diagonal_\\";
+                                if(x_cum <= 0 and y_cum < 0): #left up 
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['lu']['start']));
+
+                                if(x_cum > 0 and y_cum >= 0): #right down
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['rd']['start']));
 
                             if(x_cum * y_cum < 0): #right up
                                 self.gesture["type"] = "swipe_diagonal_//";
-                                self.gesture_queue.append("evemu_do control down".split());
                                 if(x_cum >= 0 and y_cum < 0): #right up
-                                    self.gesture_queue.append("evemu_do Page_Down".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['ru']['start']));
 
                                 if(x_cum < 0 and y_cum >= 0): #left down
-                                    self.gesture_queue.append("evemu_do Page_Up".split());
-
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['ld']['start']));
+                                
                                 self.rep_start = float(event["time"]);
 
                         else: #fell under CLEARANCE
@@ -219,29 +225,34 @@ class Worker(threading.Thread):
                             self.gesture_queue.append("evemu_do ctrl+alt down".split()); #xdotool was causing issue when esc was pressed beforehand
                             if (x_cum > y_cum):
                                 if (self.gesture["total"]["x-cum"] >= 0):
-                                    self.gesture_queue.append("evemu_do Right".split()); #xdotool removed because was hanging on subprocess.call but not subprocess.Popen. p
+                                    #self.gesture_queue.append("evemu_do Right".split()); #xdotool removed because was hanging on subprocess.call but not subprocess.Popen. p
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['r']['start']));
                                 else:
-                                    self.gesture_queue.append("evemu_do Left".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['l']['start']));
                             else:
                                 if (self.gesture["total"]["y-cum"] >= 0):
-                                    self.gesture_queue.append("evemu_do Down".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['d']['start']));
                                 else:
-                                    self.gesture_queue.append("evemu_do Up".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['u']['start']));
                             self.rep_start = float(event["time"]);
                         elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
                             y_cum = self.gesture["total"]["y-cum"];
                             if(x_cum * y_cum > 0): #left up, right down
                                 self.gesture["type"] = "swipe_diagonal_\\";
+                                if(x_cum <= 0 and y_cum < 0): #left up 
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['lu']['start']));
+
+                                if(x_cum > 0 and y_cum >= 0): #right down
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['rd']['start']));
 
                             if(x_cum * y_cum < 0): #right up
                                 self.gesture["type"] = "swipe_diagonal_//";
-                                self.gesture_queue.append("evemu_do Alt down".split());
                                 if(x_cum >= 0 and y_cum < 0): #right up
-                                    self.gesture_queue.append("evemu_do Right".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['ru']['start']));
 
                                 if(x_cum < 0 and y_cum >= 0): #left down
-                                    self.gesture_queue.append("evemu_do Left".split());
+                                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['ld']['start']));
 
                                 self.rep_start = float(event["time"]);
 
