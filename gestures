@@ -84,6 +84,7 @@ class Worker(threading.Thread):
                 self.gesture_queue = [];
 
 
+
     def finger_start(self, event):
         """ append new finger to gesture.
         """
@@ -377,67 +378,87 @@ class Worker(threading.Thread):
         if (float(clock) - self.debounce >= DEBOUNCE):
             if(no_slots == 2):
                 if(self.gesture["type"] == "pinch"):
-                    subprocess.call("evemu_do ctrl up".split());
+                    print(all_gestures["pinch"]['2']['i']['end']);
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["pinch"]['2']['i']['end']));
 
             if(no_slots == 3):
                 if (self.gesture["type"] == "swipe_horizontal"):
                     #print("end 3 finger swipe_hor")
-                    subprocess.call("evemu_do alt up".split());
+
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['l']['end']));
                 elif (self.gesture["type"] == "swipe_vertical"):
                     #print("swipe_ver")
-                    subprocess.call("evemu_do super+i".split());
+
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['u']['end']));
 
                 elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
-                        subprocess.call("evemu_do ctrl+shift+t".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
-                        subprocess.call("evemu_do ctrl+w".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['rd']['end']));
 
                 elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
-                    subprocess.call("evemu_do control up".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['3']['ld']['end']));
 
             if(no_slots == 4):
                 if (not self.gesture["type"]):
                     #print("4 finger tap");
-                    subprocess.call("evemu_do super+w".split());
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['t']));
                 elif (self.gesture["type"] == "swipe_horizontal_vertical"):
-                        subprocess.call("evemu_do ctrl+alt up".split()); #xdo_tool was causing issues with ESC
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['l']['end']));
 
                 elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
-                        subprocess.call("evemu_do ctrl+shift+n".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
-                        subprocess.call("save_and_close".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['rd']['end']));
 
                 elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
-                        subprocess.call("evemu_do Alt up".split());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['4']['ld']['end']));
 
             if(no_slots == 5):
                 if (not self.gesture["type"]):
                     #print("5 finger tap");
                     os.popen('''bash -c "goldendict \"$(xsel|tr '\n' ' '|sed -r 's/^[^[:alpha:]]*([-[:alpha:]]*).*$/&/')\""'''); #couldn't get subprocess to work on this
                 elif (self.gesture["type"] == "swipe_horizontal"):
-                    if(x_cum >= 0):
-                        subprocess.Popen("evemu_do ctrl+alt+t".split(), cwd=pathlib.Path.home());
+                    #print("end 3 finger swipe_hor")
+
+                    if(x_cum <= 0):
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['l']['end']));
                     else:
-                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home()); #'' for "" doesn't work as expected
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['r']['end']));#'' for "" doesn't work as expected
+
                 elif (self.gesture["type"] == "swipe_vertical"):
+                    #print("swipe_ver")
                     if(y_cum >= 0):
-                        subprocess.Popen("flip".split(), cwd=pathlib.Path.home());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['u']['end']));
                     else:
-                        subprocess.Popen("toggle_global_window_switcher".split(), cwd=pathlib.Path.home());
-                elif (self.gesture["type"] == "swipe_diagonal"):
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['d']['end']));
+
+                elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
                         #print("left up")
-                        subprocess.Popen("evemu_do ctrl+t".split());# new terminal window, gnome-terminal kept opening on / directory
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
-                        subprocess.Popen("restartTouchpadAndPen".split(), cwd=pathlib.Path.home());
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['rd']['end']));
+
+                elif(self.gesture["type"] == "swipe_diagonal_//"): # issue here if using x-cum and y-cum because they are wiped for interactive (not one-shot) devices
+
+                    if(x_cum < 0 and y_cum >= 0): #left down
+                        self.gesture_queue.extend(map(lambda x: shlex.split(x), all_gestures["swipe"]['5']['ld']['end'])); #subprocess.Popen("orientation_swap".split(), cwd=pathlib.Path.home()); #hasn't shown value
                     if(x_cum >= 0 and y_cum < 0): #right up
                         self.reset();
-                    if(x_cum < 0 and y_cum >= 0): #left down
-                        subprocess.Popen(shlex.split('emacsclient -c -a ""'), cwd=pathlib.Path.home());#subprocess.Popen("orientation_swap".split(), cwd=pathlib.Path.home()); #hasn't shown value
+
+
+        for gesture in self.gesture_queue:
+            #print(gesture)
+            if (no_slots == 5):
+                subprocess.Popen(gesture);
+            else:
+                subprocess.call(gesture);
+        self.gesture_queue = [];
 
         # restart debounce
         self.debounce = float(clock);
