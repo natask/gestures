@@ -1,21 +1,22 @@
 
 # Table of Contents
 
-1.  [Motivation](#org3ed3e14)
-2.  [Features](#org76909f7)
-3.  [Dependencies](#org50fa07c)
-4.  [Installation/Uninstallation](#org6e9b870)
-5.  [Alternatives](#org978a4f0)
-6.  [TODOS](#orge02d31b)
-    1.  [add customization <code>[0/3]</code>](#org66d74b2)
-    2.  [enrich readme](#org0284234)
-    3.  [Write script to fulfill dependencies automatically](#orga5c4f06)
-    4.  [Implement C++ version](#org96f0297)
+1.  [Motivation](#orgd0b4224)
+2.  [Features](#org130ead3)
+3.  [Dependencies](#orgec9fd5f)
+4.  [Installation/Uninstallation](#org57018b8)
+5.  [Customization](#org875c473)
+6.  [Alternatives](#orga5241ea)
+7.  [TODOS](#org4d901d6)
+    1.  [add features <code>[0/2]</code>](#orgcf21f93)
+    2.  [enrich readme](#orgb6e2d3c)
+    3.  [Write script to fulfill dependencies automatically](#orgbfeee1b)
+    4.  [Implement C++ version](#orgf4a1a06)
 
 ![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="org3ed3e14"></a>
+<a id="orgd0b4224"></a>
 
 # Motivation
 
@@ -30,7 +31,7 @@
 So I wrote this.
 
 
-<a id="org76909f7"></a>
+<a id="org130ead3"></a>
 
 # Features
 
@@ -57,7 +58,7 @@ For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, 
 to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 
 
-<a id="org50fa07c"></a>
+<a id="orgec9fd5f"></a>
 
 # Dependencies
 
@@ -69,7 +70,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org6e9b870"></a>
+<a id="org57018b8"></a>
 
 # Installation/Uninstallation
 
@@ -81,7 +82,38 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
 
 
-<a id="org978a4f0"></a>
+<a id="org875c473"></a>
+
+# Customization
+
+-   **currently customizable:** 
+
+-   swipe, pinch
+-   3,4,5 finger start and end gestures
+
+-   **example:** 
+
+    {'swipe': {
+        '3': {
+            'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+        }
+    }
+    }
+
+-   **breakdown:** 
+
+-   **(swipe,pinch):** -   define if the gesture is a swipe or a pinch
+-   **(3,4,5):** -   define the number of fingers to activate the gesture
+-   **('t', 'l', 'r',&#x2026;,'ru'):** define tap and the 8 directions a swipe can be in.
+-   **(start,end):** -   what to do when the gesture starts or ends.
+-   **(slated for a future update):** 
+
+-   **(update):** -   what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
+-   **(rep):** -   how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
+-   **(touchscreen, touchpad (even device level tag)):** to specify what a specific set of gestures apply to.
+
+
+<a id="orga5241ea"></a>
 
 # Alternatives
 
@@ -92,37 +124,39 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="orge02d31b"></a>
+<a id="org4d901d6"></a>
 
 # TODOS
 
 
 
-<a id="org66d74b2"></a>
+<a id="orgcf21f93"></a>
 
-## NEXT add customization <code>[0/3]</code>
+## TODO add features <code>[0/2]</code>
 
--   [-] enable customization by refactoring code.
+-   [-]<code>[2/7]</code> enable customization by refactoring code.
     -   [X] commands for gesture start
+    -   [X] commands for gesture end
+    -   [ ] commands for touchscreen
     -   [ ] commands for gesture update
-    -   [ ] commands for gesture end
     -   [ ] rep rate
     -   [ ] detach implementation from personal workflow
+    -   [ ] more nuanced application of gestures to different attached devices
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="org0284234"></a>
+<a id="orgb6e2d3c"></a>
 
 ## DONE enrich readme
 
 
-<a id="orga5c4f06"></a>
+<a id="orgbfeee1b"></a>
 
 ## DONE Write script to fulfill dependencies automatically
 
 
-<a id="org96f0297"></a>
+<a id="orgf4a1a06"></a>
 
 ## TODO Implement C++ version
 

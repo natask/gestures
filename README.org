@@ -88,6 +88,50 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
   - run ./uninstall.sh
   - removes everything except that what was installed by the package manager. To uninstall those, remove =evtest= and =daemonize=.
 :END:
+* Customization
+:PROPERTIES:
+:ID:       3e5fe336-63c6-4e7f-a69b-e1ab4315260c
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-03-02 Mon 04:42:21]
+:END:
+:NOTES:
+- currently customizable ::
+ 
+ 
+  - swipe, pinch
+  - 3,4,5 finger start and end gestures
+- example ::
+#+begin_src js 
+  {'swipe': {
+      '3': {
+          'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+      }
+  }
+  }
+#+end_src
+- breakdown ::
+
+  
+  - (swipe,pinch) ::
+    - define if the gesture is a swipe or a pinch 
+  - (3,4,5) ::
+    - define the number of fingers to activate the gesture
+  - ('t', 'l', 'r',...,'ru') :: define tap and the 8 directions a swipe can be in.
+  - (start,end) ::
+    - what to do when the gesture starts or ends.
+  - (slated for a future update) ::
+   
+ 
+    - (update) ::
+      - what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
+    - (rep) ::
+      - how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
+    - (touchscreen, touchpad (even device level tag)) :: 
+       to specify what a specific set of gestures apply to.
+:END:
 * Alternatives 
 :PROPERTIES:
 :ID:       480d65ce-33d2-4222-9098-ffee46f42019
@@ -116,22 +160,25 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:06:38]
 :END:
-** NEXT add customization [0/3]
+** TODO add features [0/2]
 :PROPERTIES:
 :ID:       3bc8e684-d676-46fc-b972-7b9226d417f6
 :END:
 :RESOURCES:
 :END:
 :LOGBOOK:
+- State "TODO"       from "NEXT"       [2020-03-02 Mon 04:58:17]
 - State "TODO"       from              [2020-01-17 Fri 03:07:08]
 - Newly Created           [2020-01-17 Fri 03:06:59]
 :END:
-- [-] enable customization by refactoring code.
+- [-][2/7] enable customization by refactoring code.
   - [X] commands for gesture start
+  - [X] commands for gesture end
+  - [ ] commands for touchscreen
   - [ ] commands for gesture update
-  - [ ] commands for gesture end
   - [ ] rep rate
   - [ ] detach implementation from personal workflow
+  - [ ] more nuanced application of gestures to different attached devices
 - [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
 - [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
 
