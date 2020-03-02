@@ -1,3 +1,6 @@
+# configurability
+- may now implement triggering of end gesture if start gesture exists and or the intial circle has been exgended somewhat. This combate or enables the ability to cancel a gesture much better than current methods which only "cancel" in some directionn by executing the opposite gesture. I believe this should be default behavior.
+
   # messaging protcol
 * have main loop send updates as queues
  - three types
@@ -54,3 +57,4 @@
 # comments
 * the desgin was a sucess
   * big lesson is that you really need OS + window enviroment + window manager support to smoothly implement features
+
