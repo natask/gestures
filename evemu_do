@@ -6,7 +6,7 @@ import time
 #import os
 # >>> os.environ
 
-event_number = subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| head -n1 | grep -oP '[0-9]+'") #in the future turn this to a envirmonetal variable # added head -n1 because grep -i matches more than one keybaord whne keyboard are connected 
+event_number = subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| head -n1 | grep -oP '[0-9]+'|head -n1") #in the future turn this to a envirmonetal variable # added head -n1 because grep -i matches more than one keybaord whne keyboard are connected 
 direction = "down" if sys.argv[1] == "keydown" else "up" if sys.argv[1] == "keyup" else "key" if sys.argv[1] == "key" else "null";
 keys = sys.argv[2:] if direction == "down" or direction == "up" or direction == "key" else sys.argv[1:];
 both_directions = direction != "down" and direction != "up";
