@@ -83,6 +83,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - it should handle most things.
     - may need to install =daemonize= by hand. If on Arch, I recommend =daemonize-git= from AUR.
     - may want to look at where it places things and if that meets your setup.
+    - what you truly need from this repo is gestures.config, gestures, getConfig.py. Everything else is just dependencies.
 - uninstallation ::
   
   - run ./uninstall.sh
@@ -98,39 +99,84 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - Newly Created           [2020-03-02 Mon 04:42:21]
 :END:
 :NOTES:
+- default customization ::
+  - the default customization is my config.
+  - uses extensively =evemu_do=, a script I wrote to replace =xdotool=. Much less buggy and also works on wayland.
+  - =evemu_do= works much like xdotool but only for keyboard inputs.
+    - =evemu_do tab= presses tab (also supports =evemu_do key tab=)
+    - =evemu_do keydown tab= holds down tab
+    - =evemu_do keyup tab= de-presses tab
+  - currently works by dumping events in the first keyboard it finds under /proc/bus/input/devices.
+    - may look into creating a keyboard device for it to dump all its events on.
+  - underneath it uses =evemu-event=, which is part of the =evemu= toolkit. 
+
 - currently customizable ::
- 
- 
   - swipe, pinch
   - 3,4,5 finger start and end gestures
+  - specific gestures for touchpad and touchscreen
 - example ::
-#+begin_src js 
-  {'swipe': {
-      '3': {
-          'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+   #+begin_src js 
+     {'touchpad': 
+      {'swipe': {
+          '3': {
+              'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+          }
       }
-  }
-  }
+      }
+     }
 #+end_src
 - breakdown ::
-
-  
+  - (touchscreen, touchpad) ::
+    - make a set of gestures apply to touchpad or touchscreen 
   - (swipe,pinch) ::
     - define if the gesture is a swipe or a pinch 
   - (3,4,5) ::
     - define the number of fingers to activate the gesture
   - ('t', 'l', 'r',...,'ru') :: define tap and the 8 directions a swipe can be in.
+  - ('i', 'o') :: define pinch in and pinch out.
   - (start,end) ::
     - what to do when the gesture starts or ends.
   - (slated for a future update) ::
-   
- 
     - (update) ::
       - what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
     - (rep) ::
       - how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
-    - (touchscreen, touchpad (even device level tag)) :: 
-       to specify what a specific set of gestures apply to.
+    - (device level tag) ::
+      - can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
+:END:
+* The Code
+:PROPERTIES:
+:ID:       73bbe2a4-1697-4548-a02d-5225791f8668
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-03-05 Thu 03:52:06]
+:END:
+:NOTES:
+- may need to adjust the screen size and touchpad calibration. This can be automated by looking at the dimensions as evtest is called.
+- the knobs are as follows
+TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
+TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
+
+DECISION = 450 # sufficient movement to make decision on direction
+PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
+
+ANGLE = 70 #x/y angle cleance
+CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
+  
+DEBOUNCE = 0.04  #sleep for now 40 ms, fastest tap around 25 ms , gotten from new_touch, touchpad data. in practice works well.
+THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
+PINCH_THRESHOLD = 100
+
+REP_THRES = 0.2 #need to break this TIME before REP engage
+REP = 350 # for 3 finger stuff
+REP_3 = 150 # for 3 finger stuff
+REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
+REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
+PINCH_REP = 40
+
+
 :END:
 * Alternatives 
 :PROPERTIES:
@@ -171,10 +217,10 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - State "TODO"       from              [2020-01-17 Fri 03:07:08]
 - Newly Created           [2020-01-17 Fri 03:06:59]
 :END:
-- [-][2/7] enable customization by refactoring code.
+- [-][3/7] enable customization by refactoring code.
   - [X] commands for gesture start
   - [X] commands for gesture end
-  - [ ] commands for touchscreen
+  - [X] commands for touchscreen
   - [ ] commands for gesture update
   - [ ] rep rate
   - [ ] detach implementation from personal workflow
