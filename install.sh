@@ -32,6 +32,9 @@ sudo cp gestures evemu_do getConfig.py ${install_location}
 cp gestures.conf ${config_location}
 cp gestures.desktop ${autostart_location}
 
+# add user to input group
+sudo gpasswd -a $USER input
+
 # kill others and start application
 sudo pkill libinput-gestures
 sudo pkill fusuma 

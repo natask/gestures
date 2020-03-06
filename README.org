@@ -52,7 +52,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 04:10:31]
 :END:
-- python dependencies ::
+- python dependencies (>=3.6) ::
   subprocess, pathlib, shlex, threading, queue, time, os, sys, math
 - *nix dependencies ::
   cat, grep
@@ -83,11 +83,14 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - it should handle most things.
     - may need to install =daemonize= by hand. If on Arch, I recommend =daemonize-git= from AUR.
     - may want to look at where it places things and if that meets your setup.
+    - adds user to the input group.
     - what you truly need from this repo is gestures.config, gestures, getConfig.py. Everything else is just dependencies.
 - uninstallation ::
   
   - run ./uninstall.sh
   - removes everything except that what was installed by the package manager. To uninstall those, remove =evtest= and =daemonize=.
+  - removes user from input group.
+  - will maybe add option to ask before doing stuff. Both removing user from input group and specially deleting config file could be costly.
 :END:
 * Customization
 :PROPERTIES:
@@ -156,6 +159,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :NOTES:
 - may need to adjust the screen size and touchpad calibration. This can be automated by looking at the dimensions as evtest is called.
 - the knobs are as follows
+#+begin_src python
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
@@ -175,7 +179,7 @@ REP_3 = 150 # for 3 finger stuff
 REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
-
+#+end_src
 
 :END:
 * Alternatives 
@@ -206,7 +210,7 @@ PINCH_REP = 40
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:06:38]
 :END:
-** TODO add features [0/2]
+** TODO add features [0/3]
 :PROPERTIES:
 :ID:       3bc8e684-d676-46fc-b972-7b9226d417f6
 :END:
@@ -225,6 +229,7 @@ PINCH_REP = 40
   - [ ] rep rate
   - [ ] detach implementation from personal workflow
   - [ ] more nuanced application of gestures to different attached devices
+- [ ] ask before doing stuff <<<ask before doing stuff>>>
 - [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
 - [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
 
