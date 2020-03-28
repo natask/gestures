@@ -1,4 +1,4 @@
-
+#+STARTUP: noinlineimages
 #+CAPTION: demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
 [[file:gestures.gif]]
 * Motivation 
@@ -109,24 +109,54 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - =evemu_do tab= presses tab (also supports =evemu_do key tab=)
     - =evemu_do keydown tab= holds down tab
     - =evemu_do keyup tab= de-presses tab
+    - also supports deprecated commands like =evemu_do tab down= and =evemu_do tab up= that hold down and de-presse tab respectively.
   - currently works by dumping events in the first keyboard it finds under /proc/bus/input/devices.
     - may look into creating a keyboard device for it to dump all its events on.
-  - underneath it uses =evemu-event=, which is part of the =evemu= toolkit. 
+  - underneath it uses =evemu-event=, which is part of the =evemu= toolkit.
+  - needs access to input group.
+
+- my setup ::
+  - touchpad :: 
+    - 2 finger ::
+      - 2 finger pinch in and pinch out to zoom in and out (ctrl+plus and ctrl+minus)
+    - 3 finger :: 
+      - 3 finger horizontal to switch applications (alt + tab + DIRECTION)
+      - 3 finger vertical to maximize/unmaximize application (super + i)
+      - 3 finger // slanted gesture to change tabs (ctrl + page_up and ctrl + page_down)
+      - 3 finger \\ slanted gestures to open and close tabs (ctrl+shift+t and ctrl+w)
+    - 4 finger ::
+      - 4 finger tap to open workspace view (super + w)
+      - 4 finger horizontal and vertical to switch work-spaces (Ctrl + alt + DIRECTION)
+      - 4 finger // slanted gestures to go through history (Alt + DIRECTION)
+      - 4 finger \\ slanted gestures to open and close windows (CTRL+shift+N and script to close application)
+    - 5 finger ::
+      - 5 finger tap to open dictionary (goldendict)
+      - 5 finger one shot gestures for doing a whole slew of things (a variety of scripts and applications)
+  - touchpscreen ::
+    - same as touchpad except don't use pinch in and pinch out. just use regular. I also scale the screen so that an equivalent gesture on the touchscreen is much larger (as the screen is larger than the touchpad) than that of the touchpad. This provides consistency and a pleasant user experience.
 
 - currently customizable ::
   - swipe, pinch
   - 3,4,5 finger start and end gestures
+  - 3,4 finger update gestures but tailored to my workflow (currently only "left" ("l") and "left down" ("ld"),  can be customized to do update gestures)
+    - still has limitations in terms of customizability since it is tailored for my workflow.
+  - 2 finger fully customize pinch in/out gestures
   - specific gestures for touchpad and touchscreen
 - example ::
    #+begin_src js 
      {'touchpad': 
       {'swipe': {
           '3': {
-              'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+              'l' : {'start': ['evemu_do keydown alt', 'evemu_do tab'], 'update': {'l': ["evemu_do Left"], 'r': ["evemu_do Right"], 'u': ["evemu_do Up"], 'd': ["evemu_do Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do keyup alt'], 'rep': ''},
           }
+      },
+       'pinch': {
+           '2': {
+               'i' : {'start': ['evemu_do keydown control', 'evemu_do equal'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''},
+               'o' : {'start': ['evemu_do keydown control', 'evemu_do minus'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''}
+           }
+       }
       }
-      }
-     }
 #+end_src
 - breakdown ::
   - (touchscreen, touchpad) ::
@@ -201,6 +231,21 @@ PINCH_REP = 40
   - Although it doesn't have one-shot limitation, it didn't support commands to run when the gesture begins and ends. This is useful for use-cases like switching applications which require alt-down to be pressed.
   - didn't support eight-directional gestures.
 
+    
+* Thoughts
+:PROPERTIES:
+:ID:       7049ea21-570c-4ffc-97d4-35281c7702d2
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-03-09 Mon 02:50:02]
+:END:
+:NOTES:
+- final version ::
+ the current implementation suits my use case very well so I am in no hurry to customize. With that said, I would like to implement a fully customizable version of this. A C++ version would be good as well although current performance is more than enough. 
+something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
+:END:
 * TODOS 
 :PROPERTIES:
 :ID:       a0f0322f-5cee-46b0-acb1-82c5122bf600
@@ -221,11 +266,11 @@ PINCH_REP = 40
 - State "TODO"       from              [2020-01-17 Fri 03:07:08]
 - Newly Created           [2020-01-17 Fri 03:06:59]
 :END:
-- [-][3/7] enable customization by refactoring code.
+- [-][4/7] enable customization by refactoring code.
   - [X] commands for gesture start
   - [X] commands for gesture end
   - [X] commands for touchscreen
-  - [ ] commands for gesture update
+  - [X] commands for gesture update
   - [ ] rep rate
   - [ ] detach implementation from personal workflow
   - [ ] more nuanced application of gestures to different attached devices

@@ -1,23 +1,24 @@
 
 # Table of Contents
 
-1.  [Motivation](#org55c870b)
-2.  [Features](#org32e846b)
-3.  [Dependencies](#orgbc76c8b)
-4.  [Installation/Uninstallation](#org234c048)
-5.  [Customization](#orgf776019)
-6.  [The Code](#org2e1cf64)
-7.  [Alternatives](#org92963b3)
-8.  [TODOS](#org5a51ab8)
-    1.  [add features <code>[0/3]</code>](#org05de520)
-    2.  [enrich readme](#org153a5c4)
-    3.  [Write script to fulfill dependencies automatically](#orga8b8078)
-    4.  [Implement C++ version](#orgba35891)
+1.  [Motivation](#org74a04f4)
+2.  [Features](#org0e8bbf6)
+3.  [Dependencies](#org8ac1a9a)
+4.  [Installation/Uninstallation](#org1bf7aa5)
+5.  [Customization](#orgcd71d4c)
+6.  [The Code](#orgcb0af08)
+7.  [Alternatives](#orgce52aa6)
+8.  [Thoughts](#org7647c54)
+9.  [TODOS](#org17188fd)
+    1.  [add features <code>[0/3]</code>](#org763865f)
+    2.  [enrich readme](#orgc91a837)
+    3.  [Write script to fulfill dependencies automatically](#orga04247d)
+    4.  [Implement C++ version](#org4e52207)
 
 ![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="org55c870b"></a>
+<a id="org74a04f4"></a>
 
 # Motivation
 
@@ -32,13 +33,12 @@
 So I wrote this.
 
 
-<a id="org32e846b"></a>
+<a id="org0e8bbf6"></a>
 
 # Features
 
 -   **vanilla gestures:** 
-
-features present in [libinput-gestures](https://github.com/bulletmark/libinput-gestures) and [fusuma](https://github.com/iberianpig/fusuma).
+   - features present in [libinput-gestures](https://github.com/bulletmark/libinput-gestures) and [fusuma](https://github.com/iberianpig/fusuma).
 -   **5 finger gestures:** 
 
 This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN<sub>TOOL</sub><sub>QUINTTAP</sub> must supported. This feature must supported by your driver + touchpad.
@@ -61,82 +61,115 @@ For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, 
 to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 
 
-<a id="orgbc76c8b"></a>
+<a id="org8ac1a9a"></a>
 
 # Dependencies
 
--   **python dependencies (>= 3.6) :** subprocess, pathlib, shlex, threading, queue, time, os, sys, math
+-   **python dependencies (>=3.6):** subprocess, pathlib, shlex, threading, queue, time, os, sys, math
 -   **\*nix dependencies:** cat, grep
 -   **dependencies:** stdbuf, evtest
     -   **evtest:** will maybe replaced by evemu-record in the future.
     -   **daemonize:** using `& disown` should work as well but this is a sure way to detach and run this on a global scale.
--   **default dependencies (if running default configuration):**
+-   **default dependencies (if running default configuration):** 
     -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org234c048"></a>
+<a id="org1bf7aa5"></a>
 
 # Installation/Uninstallation
 
--   **installation:**
-    -   run ./install.sh
+-   **installation:** -   run ./install.sh
         -   it should handle most things.
         -   may need to install `daemonize` by hand. If on Arch, I recommend `daemonize-git` from AUR.
         -   may want to look at where it places things and if that meets your setup.
         -   adds user to the input group.
         -   what you truly need from this repo is gestures.config, gestures, getConfig.py. Everything else is just dependencies.
--   **uninstallation:**
-    -   run ./uninstall.sh
-        -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
-        -   removes user from input group.
-        -   will maybe add option to ask before doing stuff. Both removing user from input group and specially deleting config file could be costly.
+-   **uninstallation:** -   run ./uninstall.sh
+    -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
+    -   removes user from input group.
+    -   will maybe add option to ask before doing stuff. Both removing user from input group and specially deleting config file could be costly.
 
 
-<a id="orgf776019"></a>
+<a id="orgcd71d4c"></a>
 
 # Customization
 
--   **default customization:**
-
--   the default customization is my config.
+-   **default customization:** -   the default customization is my config.
     -   uses extensively `evemu_do`, a script I wrote to replace `xdotool`. Much less buggy and also works on wayland.
     -   `evemu_do` works much like xdotool but only for keyboard inputs.
         -   `evemu_do tab` presses tab (also supports `evemu_do key tab`)
         -   `evemu_do keydown tab` holds down tab
         -   `evemu_do keyup tab` de-presses tab
+        -   also supports deprecated commands like `evemu_do tab down` and `evemu_do tab up` that hold down and de-presse tab respectively.
     -   currently works by dumping events in the first keyboard it finds under /proc/bus/input/devices.
         -   may look into creating a keyboard device for it to dump all its events on.
     -   underneath it uses `evemu-event`, which is part of the `evemu` toolkit.
+    -   needs access to input group.
+
+-   **my setup:** 
+   -   **touchpad:**
+        -   **2 finger:**
+            -   2 finger pinch in and pinch out to zoom in and out (ctrl+plus and ctrl+minus)
+        -   **3 finger:** 
+            -   3 finger horizontal to switch applications (alt + tab + DIRECTION)
+            -   3 finger vertical to maximize/unmaximize application (super + i)
+            -   3 finger // slanted gesture to change tabs (ctrl + page<sub>up</sub> and ctrl + page<sub>down</sub>)
+            -   3 finger \\\\ slanted gestures to open and close tabs (ctrl+shift+t and ctrl+w)
+        -   **4 finger:**
+            -   4 finger tap to open workspace view (super + w)
+            -   4 finger horizontal and vertical to switch work-spaces (Ctrl + alt + DIRECTION)
+            -   4 finger // slanted gestures to go through history (Alt + DIRECTION)
+            -   4 finger \\\\ slanted gestures to open and close windows (CTRL+shift+N and script to close application)
+        -   **5 finger:**
+            -   5 finger tap to open dictionary (goldendict)
+            -   5 finger one shot gestures for doing a whole slew of things (a variety of scripts and applications)
+    -   **touchpscreen:** 
+        -   same as touchpad except don't use pinch in and pinch out. just use regular. I also scale the screen so that an equivalent gesture on the touchscreen is much larger (as the screen is larger than the touchpad) than that of the touchpad. This provides consistency and a pleasant user experience.
 
 -   **currently customizable:** 
     -   swipe, pinch
-        -   3,4,5 finger start and end gestures
-        -   specific gestures for touchpad and touchscreen
+    -   3,4,5 finger start and end gestures
+    -   3,4 finger update gestures but tailored to my workflow (currently only "left" ("l") and "left down" ("ld"),  can be customized to do update gestures)
+        -   still has limitations in terms of customizability since it is tailored for my workflow.
+    -   2 finger fully customize pinch in/out gestures
+    -   specific gestures for touchpad and touchscreen
 -   **example:**
 ```
-{'touchpad': 
+ {'touchpad': 
          {'swipe': {
              '3': {
-                 'l' : {'start': ['evemu_do alt down', 'evemu_do tab'], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do alt up'], 'rep': ''}
+                 'l' : {'start': ['evemu_do keydown alt', 'evemu_do tab'], 'update': {'l': ["evemu_do Left"], 'r': ["evemu_do Right"], 'u': ["evemu_do Up"], 'd': ["evemu_do Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do keyup alt'], 'rep': ''},
              }
+         },
+          'pinch': {
+              '2': {
+                  'i' : {'start': ['evemu_do keydown control', 'evemu_do equal'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''},
+                  'o' : {'start': ['evemu_do keydown control', 'evemu_do minus'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''}
+              }
+          }
          }
-         }
-        }
-```
+   ```
 -   **breakdown:**
-    -   **(touchscreen, touchpad):** -   make a set of gestures apply to touchpad or touchscreen
-    -   **(swipe,pinch):** -   define if the gesture is a swipe or a pinch
-    -   **(3,4,5):** -   define the number of fingers to activate the gesture
+    -   **(touchscreen, touchpad):**
+       -   make a set of gestures apply to touchpad or touchscreen
+    -   **(swipe,pinch):** 
+       -   define if the gesture is a swipe or a pinch
+    -   **(3,4,5):** 
+       -   define the number of fingers to activate the gesture
     -   **('t', 'l', 'r',&#x2026;,'ru'):** define tap and the 8 directions a swipe can be in.
     -   **('i', 'o'):** define pinch in and pinch out.
-    -   **(start,end):** -   what to do when the gesture starts or ends.
+    -   **(start,end):**
+        -   what to do when the gesture starts or ends.
     -   **(slated for a future update):** 
-        -   **(update):** -   what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
-        -   **(rep):** -   how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
-        -   **(device level tag):** -   can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
+        -   **(update):** 
+            -   what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
+        -   **(rep):** 
+            -   how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
+        -   **(device level tag):** 
+            -   can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 
 
-<a id="org2e1cf64"></a>
+<a id="orgcb0af08"></a>
 
 # The Code
 
@@ -164,7 +197,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     PINCH_REP = 40
 ```
 
-<a id="org92963b3"></a>
+<a id="orgce52aa6"></a>
 
 # Alternatives
 
@@ -175,40 +208,49 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="org5a51ab8"></a>
+<a id="org7647c54"></a>
+
+# Thoughts
+
+-   **final version:** the current implementation suits my use case very well so I am in no hurry to customize. With that said, I would like to implement a fully customizable version of this. A C++ version would be good as well although current performance is more than enough.
+
+something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
+
+
+<a id="org17188fd"></a>
 
 # TODOS
 
 
 
-<a id="org05de520"></a>
+<a id="org763865f"></a>
 
 ## TODO add features <code>[0/3]</code>
 
--   [-]<code>[3/7]</code> enable customization by refactoring code.
+-   [-]<code>[4/7]</code> enable customization by refactoring code.
     -   [X] commands for gesture start
     -   [X] commands for gesture end
     -   [X] commands for touchscreen
-    -   [ ] commands for gesture update
+    -   [X] commands for gesture update
     -   [ ] rep rate
     -   [ ] detach implementation from personal workflow
     -   [ ] more nuanced application of gestures to different attached devices
--   [ ] ask before doing stuff <a id="org25bb44a">ask before doing stuff</a>
+-   [ ] ask before doing stuff <a id="org25b4546">ask before doing stuff</a>
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="org153a5c4"></a>
+<a id="orgc91a837"></a>
 
 ## DONE enrich readme
 
 
-<a id="orga8b8078"></a>
+<a id="orga04247d"></a>
 
 ## DONE Write script to fulfill dependencies automatically
 
 
-<a id="orgba35891"></a>
+<a id="org4e52207"></a>
 
 ## TODO Implement C++ version
 
