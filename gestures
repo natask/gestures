@@ -31,6 +31,7 @@ PINCH_REP = 40
 
 all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
+
 # generic gesture worker
 class Worker(threading.Thread):
     """ A worker thread that takes directory names from a queue, finds all
@@ -83,7 +84,16 @@ class Worker(threading.Thread):
                 #print(self.gesture_queue)
                 for gesture in self.gesture_queue:
                     #print(gesture)
-                    subprocess.call(gesture);
+                    try:
+                        if(gesture):
+                            subprocess.call(gesture);
+                    except: 
+                        print("error with:")
+                        print("gesture = ", gesture)
+                        print("gesture queue = ", self.gesture_queue)
+                        print("gesture information = ", self.gesture)
+
+
                 self.gesture_queue = [];
 
 
@@ -517,10 +527,18 @@ class Worker(threading.Thread):
 
         for gesture in self.gesture_queue:
             #print(gesture)
-            if (no_slots == 5):
-                subprocess.Popen(gesture);
-            else:
-                subprocess.call(gesture);
+            try:
+                if(gesture):
+                    if (no_slots == 5):
+                        subprocess.Popen(gesture);
+                    else:
+                        subprocess.call(gesture);
+            except: 
+                print("error with:")
+                print("gesture = ", gesture)
+                print("gesture queue = ", self.gesture_queue)
+                print("gesture information = ", self.gesture)
+
         self.gesture_queue = [];
 
         # restart debounce

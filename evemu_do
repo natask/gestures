@@ -43,7 +43,7 @@ for keyset in keys:
 		for key in keyset:
 			#print(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1 --sync")
                         subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1".split())
-                        time.sleep(0.001) #delay to prevent triggering key press and hold down unintendedly
+                        time.sleep(0.005) #delay to prevent triggering key press and hold down unintendedly
 
 
 	if (direction == "up" or both_directions):

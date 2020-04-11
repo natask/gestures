@@ -53,7 +53,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 - Newly Created           [2020-01-17 Fri 04:10:31]
 :END:
 - python dependencies (>=3.6) ::
-  subprocess, pathlib, shlex, threading, queue, time, os, sys, math
+  subprocess, pathlib, simplejson, shlex, threading, queue, time, os, sys, math
 - *nix dependencies ::
   cat, grep
 - dependencies ::
@@ -84,13 +84,14 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - may need to install =daemonize= by hand. If on Arch, I recommend =daemonize-git= from AUR.
     - may want to look at where it places things and if that meets your setup.
     - adds user to the input group.
-    - what you truly need from this repo is gestures.config, gestures, getConfig.py. Everything else is just dependencies.
+    - what you truly need from this repo are gestures.config, gestures, getConfig.py. Everything else is just dependencies.
+    - asks to replace config file if found. Saves a backup as default to avoid pain.
 - uninstallation ::
   
   - run ./uninstall.sh
   - removes everything except that what was installed by the package manager. To uninstall those, remove =evtest= and =daemonize=.
   - removes user from input group.
-  - will maybe add option to ask before doing stuff. Both removing user from input group and specially deleting config file could be costly.
+  - asks before doing removing user from input group and specially deleting config file as it could be costly.
 :END:
 * Customization
 :PROPERTIES:
@@ -271,10 +272,10 @@ something like nested gestures will be intersting where swipes are nested in a h
   - [X] commands for gesture end
   - [X] commands for touchscreen
   - [X] commands for gesture update
-  - [ ] rep rate
+  - [ ] rep rate 
   - [ ] detach implementation from personal workflow
   - [ ] more nuanced application of gestures to different attached devices
-- [ ] ask before doing stuff <<<ask before doing stuff>>>
+- [X]  ask before doing stuff 
 - [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
 - [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
 

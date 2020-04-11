@@ -65,7 +65,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 
 # Dependencies
 
--   **python dependencies (>=3.6):** subprocess, pathlib, shlex, threading, queue, time, os, sys, math
+-   **python dependencies (>=3.6):** subprocess, pathlib, simplejson, shlex, threading, queue, time, os, sys, math
 -   **\*nix dependencies:** cat, grep
 -   **dependencies:** stdbuf, evtest
     -   **evtest:** will maybe replaced by evemu-record in the future.
@@ -83,11 +83,12 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
         -   may need to install `daemonize` by hand. If on Arch, I recommend `daemonize-git` from AUR.
         -   may want to look at where it places things and if that meets your setup.
         -   adds user to the input group.
-        -   what you truly need from this repo is gestures.config, gestures, getConfig.py. Everything else is just dependencies.
+        -   what you truly need from this repo are gestures.conf, gestures, getConfig.py. Everything else is just dependencies.
+        -   asks to replace config file if found. Saves a backup as default to avoid pain.
 -   **uninstallation:** -   run ./uninstall.sh
     -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
     -   removes user from input group.
-    -   will maybe add option to ask before doing stuff. Both removing user from input group and specially deleting config file could be costly.
+    -   asks before doing removing user from input group and specially deleting config file as it could be costly.
 
 
 <a id="orgcd71d4c"></a>
@@ -235,7 +236,7 @@ something like nested gestures will be intersting where swipes are nested in a h
     -   [ ] rep rate
     -   [ ] detach implementation from personal workflow
     -   [ ] more nuanced application of gestures to different attached devices
--   [ ] ask before doing stuff <a id="org25b4546">ask before doing stuff</a>
+-   [X] ask before doing stuff 
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
