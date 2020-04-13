@@ -33,8 +33,8 @@ def create_circle_and_text(x, y, r, id, slot, font_size, canvasName): #center co
 
 def test(device_event_name):
     root = Tk()
-    root.title("touchpad tracker")
-    myCanvas = Canvas(root,width=2020,height=1321)
+    root.title("Touchpad Tracker")
+    myCanvas = Canvas(root,width=2020/2,height=1321/2)
     myCanvas.pack()
 
     # fgr1 = create_circle(100, 100, 20, myCanvas)
@@ -81,12 +81,12 @@ def test(device_event_name):
             slot = state
 
         if "(ABS_MT_POSITION_X)," == event:
-            status_dict[slot]["x"] = float(state)/3;#int(state);
+            status_dict[slot]["x"] = float(state)/2;#int(state);
             status_dict[slot]["x_updated"] += 1;
             update = True;
 
         if "(ABS_MT_POSITION_Y)," == event:
-            status_dict[slot]["y"] = float(state)/3;#int(state);
+            status_dict[slot]["y"] = float(state)/2;#int(state);
             status_dict[slot]["y_updated"] += 1;
             update = True;
 
