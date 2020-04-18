@@ -3,6 +3,33 @@ install_location=/usr/local/bin
 config_location=~/.config
 autostart_location=~/.config/autostart
 
+# uninstall requirements
+pkgM=$( command -v yum || command -v apt-get || command -v pamac || command -v pacman ) || echo "package manager not found"
+case ${pkgM} in
+  *pacman)
+    uninstall=-R
+    auto=--noconfirm
+    ;;
+
+  *pamac)
+    uninstall=remove
+    auto=--no-confirm
+    ;;
+
+  *)
+    uninstall=remove
+    auto=-y
+    ;;
+esac
+## cat, stdbuf are builtin, may need to install daemonize by hand
+echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
+xargs -d"\n" -n 1 -ra <( cat pkg_requirements ) sudo ${pkgM} ${uninstall}
+
+## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
+## uninstalls on global python
+echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
+xargs -d"\n" -n 1 -ra <( cat py_requirements ) sudo pip3 uninstall
+
 # remove user from input group
 while true; do
     echo "Remove input group? Other tools may depend on it." 
@@ -15,20 +42,22 @@ while true; do
 done
 
 # remove placed files
-sudo rm ${install_location}/gestures 
-sudo rm ${install_location}/evemu_do 
-sudo rm ${install_location}/getConfig.py
+echo "Removing placed files gestures evemu_do and getConfig.py"
+sudo rm -i ${install_location}/gestures 
+sudo rm -i ${install_location}/evemu_do 
+sudo rm -i ${install_location}/getConfig.py
 
 ## remove config file
 while true; do
     echo "Remove configuration file (~/.config/gesture.conf)? Warning: will need to rewrite to get back." 
     read -p "(y/n):" choice
     case "$choice" in 
-      y|Y ) rm ${config_location}/gestures.conf; break;;
-      n|N ) break;;
+      y|Y ) echo "Removing config file."; rm -i ${config_location}/gestures.conf; break;;
+      n|N ) echo "Skipping Removal of config file."; break;;
       * ) echo "Please answer y or n.";;
     esac
 done
 
-rm ${autostart_location}/gestures.desktop 
+echo "Removing from auto start."
+rm -i ${autostart_location}/gestures.desktop 
 

@@ -236,6 +236,7 @@ something like nested gestures will be intersting where swipes are nested in a h
     -   [ ] rep rate
     -   [ ] detach implementation from personal workflow
     -   [ ] more nuanced application of gestures to different attached devices
+    -   [ ] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
 -   [X] ask before doing stuff 
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+StartupNotify=false 
+Exec=/usr/local/bin/gestures
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=gestures
+Name=gestures
+Comment[en_US]=fluid gestures for linux.
+Comment=fluid gestures for linux.
