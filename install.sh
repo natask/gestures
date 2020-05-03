@@ -32,7 +32,8 @@ echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
 cat py_requirements | xargs -n 1 sudo pip3 install
 
 # place files in corresponding locations
-sudo cp gestures evemu_do getConfig.py ${install_location}
+echo "Placing gestures evemu_do getConfig.py orientation in ${install_location}."
+sudo cp gestures evemu_do getConfig.py orientation ${install_location}
 if test -f "${config_location}/gestures.conf"; then
     while true; do
         echo "Config file exists. override (saves backup as gestures.conf.bak)?" 

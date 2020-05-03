@@ -1,0 +1,20 @@
+#!/bin/bash
+# return orientation of screen, code written to avoid issues with the screen not being primary
+device=" -w -m 1 connected"
+status="$(xrandr -q|grep ${device}|awk '{print $3}')"
+# if [ $status == 'primary' ]; then
+#    state="$(xrandr -q|grep ${device}|awk '{print $5}')"
+# else
+#    state="$(xrandr -q|grep ${device}|awk '{print $3}')"
+# fi
+# echo $state;
+
+case "$status" in
+   "primary")
+    state="$(xrandr -q|grep ${device}|awk '{print $5}')"
+    ;; 
+  *)
+    state="$(xrandr -q|grep ${device}|awk '{print $4}')"
+    ;;
+esac
+echo $state;

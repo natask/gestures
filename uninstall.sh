@@ -42,10 +42,11 @@ while true; do
 done
 
 # remove placed files
-echo "Removing placed files gestures evemu_do and getConfig.py"
+echo "Removing placed files gestures evemu_do getConfig.py and orientation"
 sudo rm -i ${install_location}/gestures 
 sudo rm -i ${install_location}/evemu_do 
 sudo rm -i ${install_location}/getConfig.py
+sudo rm -i ${install_location}/orientation
 
 ## remove config file
 while true; do
