@@ -1,5 +1,5 @@
 #+STARTUP: noinlineimages
-#+CAPTION: demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
+#+CAPTION: Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
 [[file:gestures.gif]]
 * Motivation 
 :PROPERTIES:
@@ -28,21 +28,25 @@ So I wrote this.
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 07:37:48]
 :END:
-- vanilla gestures ::
- features present in [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] and [[https://github.com/iberianpig/fusuma][fusuma]].
+- Vanilla gestures ::
+  features present in [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] and [[https://github.com/iberianpig/fusuma][fusuma]].
 - 5 finger gestures :: 
-This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN_TOOL_QUINTTAP must supported. This feature must supported by your driver + touchpad.
-check by running =evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP=. if it prints a line containing ~"BTN_TOOL_QUINTTAP"~, your touchpad+driver support it.
-- tap gestures ::
-This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
+  This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN_TOOL_QUINTTAP must supported. This feature must supported by your driver + touchpad.
+  check by running =evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP=. if it prints a line containing ~"BTN_TOOL_QUINTTAP"~, your touchpad+driver support it.
+- Tap gestures ::
+  This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
 - Touchscreen gestures ::
-Extend gestures to touchscreen.
+  Extend gestures to touchscreen.
 - Fluid gestures :: 
-Allow the user to do different things without raising their fingers from the touchpad. This takes advantage of the fact that gesture execution is separated into 3 parts, start, update, and end, by doing complementary actions in each.
+  Allow the user to do different things without raising their fingers from the touchpad. This takes advantage of the fact that gesture execution is separated into 3 parts, start, update, and end, by doing complementary actions in each.
 
-For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, where direction is "LEFT", "RIGHT", "UP", "DOWN".
+  For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, where direction is "LEFT", "RIGHT", "UP", "DOWN".
 
-to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
+  to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
+- Orientation adjustment ::
+  - using the script =orientation=, can figure out the orientation of screen to adjust both touchscreen and touchpad gestures. Script needs to be restarted for updates to take effect.  
+- Compatibility with both X11 and Wayland ::
+  - works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, =evemu_d0= is based on =evemu= and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 * Dependencies 
 :PROPERTIES:
 :ID:       96ea91ca-f6d0-47f2-bdaa-52dd6903122b
@@ -62,6 +66,8 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     will maybe replaced by evemu-record in the future.
   - daemonize ::
     using =& disown= should work as well but this is a sure way to detach and run this on a global scale.
+  - xrandr ::
+    used by =orientation= for orientation detection. 
 - default dependencies (if running default configuration) :: 
   - evemu ::
     need evemu-do (alternative to xdotool that I wrote) in $PATH.
@@ -178,6 +184,182 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - (device level tag) ::
       - can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 :END:
+* Debugging
+:PROPERTIES:
+:ID:       684157c9-d085-44ae-b1d3-d2aa88ebce45
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-03 Sun 12:35:16]
+:END:
+:NOTES:
+- Debugging script ::
+  running the script with anything after it in the terminal will run it without using demonize. Which is to  say that all errors will be logged out to terminal.
+  e.g
+  #+begin_src bash
+  gestures debug 
+  #+end_src
+- Syntactic issues in Config file ::
+  - There are times when the builtin syntax checker for the config file, simplejson, doesn't point to the correct place where a syntax error occurred within the config file. In such occasions use an online JSON linter. Those tend to work.
+  - To use them though, will need to remove all comments and change ="" to ''= from the config file. run the following code in a python shell to get a valid version.
+    #+begin_src python :results output
+      'Read given configuration file and store internal actions etc'
+      import os
+      conffile = os.path.expanduser("~/.config/gestures.conf")
+      with open(conffile, "r") as fp:
+          lines = []
+          linenos = []
+          for num, line in enumerate(fp, 1):
+              if not line or line[0] == '#':
+                  continue
+              lines.append(line.replace("'", "\""))
+              linenos.append(num)
+          print("".join(lines))
+    #+end_src
+
+    #+RESULTS:
+    #+begin_example
+    {"touchpad" :{
+    "swipe": {
+
+    "3": {
+        "l" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
+        "r" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+w"], "rep": ""},
+        "ld": {"start": ["evemu_do keydown control","evemu_do Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""},
+        "ru": {"start": ["evemu_do keydown control","evemu_do Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""}
+     },
+
+    "4": {
+        "t" : ["evemu_do super+w"],
+        "l" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Right"],"update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup ctrl+alt"], "rep": ""},
+        "r" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "u" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "d" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+n"], "rep": ""},
+        "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
+        "ld": {"start": ["evemu_do keydown alt","evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Left"], "ru": ["evemu_do Right"]}, "end": ["evemu_do keyup Alt"], "rep": ""},
+        "ru": {"start": ["evemu_do keydown alt","evemu_do Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["evemu_do Left"], "ru": ["evemu_do Down"]}, "end": [], "rep": ""}
+     },
+    "5": {
+        "t" : ["open_dictionary"],
+        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
+        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+alt+t"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["toggle_global_window_switcher"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["flip"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["restartTouchpadAndPen"], "rep": ""},
+        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
+        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["reset_keyboard"], "rep": ""}
+         }
+     },
+
+     "pinch": {
+
+     "2": {
+        "i" : {"start": ["evemu_do keydown control", "evemu_do equal"], "update": {"i": ["evemu_do plus"], "o": ["evemu_do minus"]}, "end": ["evemu_do keyup ctrl"], "rep": ""},
+        "o" : {"start": ["evemu_do keydown control", "evemu_do minus"], "update": {"i": ["evemu_do plus"], "o": ["evemu_do minus"]}, "end": ["evemu_do keyup ctrl"], "rep": ""}
+     },
+     "3": {
+        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+     },
+    "4": {
+        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+     },
+    "5": {
+        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+        } 
+     }
+    },
+
+
+    "touchscreen" :{
+    "swipe": {
+
+    "3": {
+        "l" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
+        "r" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+w"], "rep": ""},
+        "ld": {"start": ["evemu_do keydown control","evemu_do Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""},
+        "ru": {"start": ["evemu_do keydown control","evemu_do Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""}
+     },
+
+    "4": {
+        "t" : ["evemu_do super+w"],
+        "l" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Right"],"update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup ctrl+alt"], "rep": ""},
+        "r" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "u" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "d" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+n"], "rep": ""},
+        "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
+        "ld": {"start": ["evemu_do keydown alt","evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Left"], "ru": ["evemu_do Right"]}, "end": ["evemu_do keyup Alt"], "rep": ""},
+        "ru": {"start": ["evemu_do keydown alt","evemu_do Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["evemu_do Left"], "ru": ["evemu_do Down"]}, "end": [], "rep": ""}
+     },
+    "5": {
+        "t" : ["open_dictionary"],
+        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
+        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+alt+t"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["toggle_global_window_switcher"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["flip"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["restartTouchpadAndPen"], "rep": ""},
+        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
+        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["reset_keyboard"], "rep": ""}
+         }
+     },
+
+     "pinch": {
+
+     "2": {
+        "i" : {"start": ["", ""], "update": {"i": [""], "o": [""]}, "end": [""], "rep": ""},
+        "o" : {"start": ["", ""], "update": {"i": [""], "o": [""]}, "end": [""], "rep": ""}
+     },
+     "3": {
+        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+     },
+    "4": {
+        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+     },
+    "5": {
+        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+        } 
+
+    }
+    }
+
+    #+end_example
+
+:END:
+* Compatibility
+:PROPERTIES:
+:ID:       7698007d-2270-43e5-be18-487db198b985
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-03 Sun 13:06:22]
+:END:
+:NOTES:
+- X11 ::
+  - works fine.
+  - may need to modify =orientation= if it is not tracking the screen with a touchscreen/touchpad.
+- wayland ::
+  - works if using my script =evemu_do= to generate keystrokes.
+  - =orientation= may not work on wayland since it depends on xrandr although I haven't tested myself. 
+:END:
 * The Code
 :PROPERTIES:
 :ID:       73bbe2a4-1697-4548-a02d-5225791f8668
@@ -190,7 +372,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :NOTES:
 - may need to adjust the screen size and touchpad calibration. This can be automated by looking at the dimensions as evtest is called.
 - the knobs are as follows
-#+begin_src python
+  #+begin_src python
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
@@ -211,8 +393,8 @@ REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes oversteppi
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 #+end_src
-
 :END:
+
 * Alternatives 
 :PROPERTIES:
 :ID:       480d65ce-33d2-4222-9098-ffee46f42019
@@ -231,7 +413,6 @@ PINCH_REP = 40
   
   - Although it doesn't have one-shot limitation, it didn't support commands to run when the gesture begins and ends. This is useful for use-cases like switching applications which require alt-down to be pressed.
   - didn't support eight-directional gestures.
-
     
 * Thoughts
 :PROPERTIES:
@@ -275,8 +456,8 @@ something like nested gestures will be intersting where swipes are nested in a h
   - [ ] rep rate 
   - [ ] detach implementation from personal workflow
   - [ ] more nuanced application of gestures to different attached devices
-  - [ ] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
-- [X]  ask before doing stuff 
+  - [X] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
+- [X]  ask before doing stuff in installation and uninstallation scripts 
 - [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
 - [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
 
@@ -300,6 +481,36 @@ CLOSED: [2020-02-04 Tue 23:35:22]
 :LOGBOOK:
 - State "TODO"       from              [2020-01-17 Fri 04:26:33]
 - Newly Created           [2020-01-17 Fri 04:26:25]
+:END:
+** TODO Include error handling for mistakes in config file
+:PROPERTIES:
+:ID:       d1bd04ac-44d5-49e1-91e8-67a6cea3e9da
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-03 Sun 13:43:24]
+:END:
+:NOTES:
+There is already error handling for syntactic issues of the config file.
+But as noted in [[https://github.com/natask/gestures/issues/2][this issue]], error handling for incorrect proprieties within config is currently nonexistent. More 
+specifically, lines such as 
+#+begin_src python
+self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['u']['end']));
+#+end_src
+do no error checking on whether proprieties "swipe", "5", "u" or "end" actually exist within the config file.
+:END:
+** TODO Create a standalone input device for this application 
+:PROPERTIES:
+:ID:       3bbc9266-1f97-49ea-979e-f49787edc944
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-03 Sun 13:13:14]
+:END:
+:NOTES:
+=evemu_do= injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
 :END:
 ** TODO Implement C++ version
 :PROPERTIES:

@@ -638,7 +638,7 @@ def main():
 
 def test(device_event_name, factor, dev):
     #make sure to start with a single finger when the base re-attaches because slot and tracking id won't fire before position
-    status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
+    status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}, "1":{"id": -1, "x_updated": 0, "y_updated": 0}, "2": {"id": -1, "x_updated": 0, "y_updated": 0}, "3":{"id": -1, "x_updated": 0, "y_updated": 0}, "4": {"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
     slot = "0"
     update = False
 

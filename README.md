@@ -1,24 +1,28 @@
 
 # Table of Contents
 
-1.  [Motivation](#org74a04f4)
-2.  [Features](#org0e8bbf6)
-3.  [Dependencies](#org8ac1a9a)
-4.  [Installation/Uninstallation](#org1bf7aa5)
-5.  [Customization](#orgcd71d4c)
-6.  [The Code](#orgcb0af08)
-7.  [Alternatives](#orgce52aa6)
-8.  [Thoughts](#org7647c54)
-9.  [TODOS](#org17188fd)
-    1.  [add features <code>[0/3]</code>](#org763865f)
-    2.  [enrich readme](#orgc91a837)
-    3.  [Write script to fulfill dependencies automatically](#orga04247d)
-    4.  [Implement C++ version](#org4e52207)
+1.  [Motivation](#org43ddc30)
+2.  [Features](#org746ad1f)
+3.  [Dependencies](#org0d6bc7b)
+4.  [Installation/Uninstallation](#org4725c45)
+5.  [Customization](#org136a8e0)
+6.  [Debugging](#orgbc50cff)
+7.  [Compatibility](#orgcc80bd3)
+8.  [The Code](#orga87c0fd)
+9.  [Alternatives](#org0ba54e8)
+10. [Thoughts](#org8ee356c)
+11. [TODOS](#org4ce8fd2)
+    1.  [add features <code>[1/3]</code>](#org15a9c5d)
+    2.  [enrich readme](#org2edd43c)
+    3.  [Write script to fulfill dependencies automatically](#orgde3ddb8)
+    4.  [Include error handling for mistakes in config file](#org3758e23)
+    5.  [Create a standalone input device for this application](#orgd426a24)
+    6.  [Implement C++ version](#orgf3c744c)
 
-![img](gestures.gif "demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
+![img](gestures.gif "Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="org74a04f4"></a>
+<a id="org43ddc30"></a>
 
 # Motivation
 
@@ -33,35 +37,25 @@
 So I wrote this.
 
 
-<a id="org0e8bbf6"></a>
+<a id="org746ad1f"></a>
 
 # Features
 
--   **vanilla gestures:** 
-   - features present in [libinput-gestures](https://github.com/bulletmark/libinput-gestures) and [fusuma](https://github.com/iberianpig/fusuma).
--   **5 finger gestures:** 
-
-This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN<sub>TOOL</sub><sub>QUINTTAP</sub> must supported. This feature must supported by your driver + touchpad.
-check by running `evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP`. if it prints a line containing `"BTN_TOOL_QUINTTAP"`, your touchpad+driver support it.
-
--   **tap gestures:** 
-
-This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
-
--   **Touchscreen gestures:** 
-
-Extend gestures to touchscreen.
-
--   **Fluid gestures:** 
-
-Allow the user to do different things without raising their fingers from the touchpad. This takes advantage of the fact that gesture execution is separated into 3 parts, start, update, and end, by doing complementary actions in each.
-
-For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, where direction is "LEFT", "RIGHT", "UP", "DOWN".
-
-to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
+-   **Vanilla gestures:** features present in [libinput-gestures](https://github.com/bulletmark/libinput-gestures) and [fusuma](https://github.com/iberianpig/fusuma).
+-   **5 finger gestures:** This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN<sub>TOOL</sub><sub>QUINTTAP</sub> must supported. This feature must supported by your driver + touchpad.
+    check by running `evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP`. if it prints a line containing `"BTN_TOOL_QUINTTAP"`, your touchpad+driver support it.
+-   **Tap gestures:** This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
+-   **Touchscreen gestures:** Extend gestures to touchscreen.
+-   **Fluid gestures:** Allow the user to do different things without raising their fingers from the touchpad. This takes advantage of the fact that gesture execution is separated into 3 parts, start, update, and end, by doing complementary actions in each.
+    
+    For example, assume the shortcut to switch windows is "CTRL + ALT" + direction, where direction is "LEFT", "RIGHT", "UP", "DOWN".
+    
+    to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
+-   **Orientation adjustment:** -   using the script `orientation`, can figure out the orientation of screen to adjust both touchscreen and touchpad gestures. Script needs to be restarted for updates to take effect.
+-   **Compatibility with both X11 and Wayland:** -   works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, `evemu_d0` is based on `evemu` and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 
 
-<a id="org8ac1a9a"></a>
+<a id="org0d6bc7b"></a>
 
 # Dependencies
 
@@ -70,11 +64,11 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 -   **dependencies:** stdbuf, evtest
     -   **evtest:** will maybe replaced by evemu-record in the future.
     -   **daemonize:** using `& disown` should work as well but this is a sure way to detach and run this on a global scale.
--   **default dependencies (if running default configuration):** 
-    -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
+    -   **xrandr:** used by `orientation` for orientation detection.
+-   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org1bf7aa5"></a>
+<a id="org4725c45"></a>
 
 # Installation/Uninstallation
 
@@ -83,7 +77,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
         -   may need to install `daemonize` by hand. If on Arch, I recommend `daemonize-git` from AUR.
         -   may want to look at where it places things and if that meets your setup.
         -   adds user to the input group.
-        -   what you truly need from this repo are gestures.conf, gestures, getConfig.py. Everything else is just dependencies.
+        -   what you truly need from this repo are gestures.config, gestures, getConfig.py. Everything else is just dependencies.
         -   asks to replace config file if found. Saves a backup as default to avoid pain.
 -   **uninstallation:** -   run ./uninstall.sh
     -   removes everything except that what was installed by the package manager. To uninstall those, remove `evtest` and `daemonize`.
@@ -91,7 +85,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   asks before doing removing user from input group and specially deleting config file as it could be costly.
 
 
-<a id="orgcd71d4c"></a>
+<a id="org136a8e0"></a>
 
 # Customization
 
@@ -107,36 +101,26 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   underneath it uses `evemu-event`, which is part of the `evemu` toolkit.
     -   needs access to input group.
 
--   **my setup:** 
-   -   **touchpad:**
-        -   **2 finger:**
-            -   2 finger pinch in and pinch out to zoom in and out (ctrl+plus and ctrl+minus)
-        -   **3 finger:** 
-            -   3 finger horizontal to switch applications (alt + tab + DIRECTION)
+-   **my setup:** -   **touchpad:** -   **2 finger:** -   2 finger pinch in and pinch out to zoom in and out (ctrl+plus and ctrl+minus)
+        -   **3 finger:** -   3 finger horizontal to switch applications (alt + tab + DIRECTION)
             -   3 finger vertical to maximize/unmaximize application (super + i)
             -   3 finger // slanted gesture to change tabs (ctrl + page<sub>up</sub> and ctrl + page<sub>down</sub>)
             -   3 finger \\\\ slanted gestures to open and close tabs (ctrl+shift+t and ctrl+w)
-        -   **4 finger:**
-            -   4 finger tap to open workspace view (super + w)
+        -   **4 finger:** -   4 finger tap to open workspace view (super + w)
             -   4 finger horizontal and vertical to switch work-spaces (Ctrl + alt + DIRECTION)
             -   4 finger // slanted gestures to go through history (Alt + DIRECTION)
             -   4 finger \\\\ slanted gestures to open and close windows (CTRL+shift+N and script to close application)
-        -   **5 finger:**
-            -   5 finger tap to open dictionary (goldendict)
+        -   **5 finger:** -   5 finger tap to open dictionary (goldendict)
             -   5 finger one shot gestures for doing a whole slew of things (a variety of scripts and applications)
-    -   **touchpscreen:** 
-        -   same as touchpad except don't use pinch in and pinch out. just use regular. I also scale the screen so that an equivalent gesture on the touchscreen is much larger (as the screen is larger than the touchpad) than that of the touchpad. This provides consistency and a pleasant user experience.
+    -   **touchpscreen:** -   same as touchpad except don't use pinch in and pinch out. just use regular. I also scale the screen so that an equivalent gesture on the touchscreen is much larger (as the screen is larger than the touchpad) than that of the touchpad. This provides consistency and a pleasant user experience.
 
--   **currently customizable:** 
-    -   swipe, pinch
+-   **currently customizable:** -   swipe, pinch
     -   3,4,5 finger start and end gestures
     -   3,4 finger update gestures but tailored to my workflow (currently only "left" ("l") and "left down" ("ld"),  can be customized to do update gestures)
         -   still has limitations in terms of customizability since it is tailored for my workflow.
     -   2 finger fully customize pinch in/out gestures
     -   specific gestures for touchpad and touchscreen
--   **example:**
-```
- {'touchpad': 
+-   **example:** {'touchpad': 
          {'swipe': {
              '3': {
                  'l' : {'start': ['evemu_do keydown alt', 'evemu_do tab'], 'update': {'l': ["evemu_do Left"], 'r': ["evemu_do Right"], 'u': ["evemu_do Up"], 'd': ["evemu_do Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do keyup alt'], 'rep': ''},
@@ -149,56 +133,81 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
               }
           }
          }
-   ```
--   **breakdown:**
-    -   **(touchscreen, touchpad):**
-       -   make a set of gestures apply to touchpad or touchscreen
-    -   **(swipe,pinch):** 
-       -   define if the gesture is a swipe or a pinch
-    -   **(3,4,5):** 
-       -   define the number of fingers to activate the gesture
+-   **breakdown:** -   **(touchscreen, touchpad):** -   make a set of gestures apply to touchpad or touchscreen
+    -   **(swipe,pinch):** -   define if the gesture is a swipe or a pinch
+    -   **(3,4,5):** -   define the number of fingers to activate the gesture
     -   **('t', 'l', 'r',&#x2026;,'ru'):** define tap and the 8 directions a swipe can be in.
     -   **('i', 'o'):** define pinch in and pinch out.
-    -   **(start,end):**
-        -   what to do when the gesture starts or ends.
-    -   **(slated for a future update):** 
-        -   **(update):** 
-            -   what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
-        -   **(rep):** 
-            -   how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
-        -   **(device level tag):** 
-            -   can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
+    -   **(start,end):** -   what to do when the gesture starts or ends.
+    -   **(slated for a future update):** -   **(update):** -   what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
+        -   **(rep):** -   how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
+        -   **(device level tag):** -   can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 
 
-<a id="orgcb0af08"></a>
+<a id="orgbc50cff"></a>
+
+# Debugging
+
+-   **Debugging script:** running the script with anything after it in the terminal will run it without using demonize. Which is to  say that all errors will be logged out to terminal.
+    e.g
+    
+        gestures debug
+-   **Syntactic issues in Config file:** -   There are times when the builtin syntax checker for the config file, simplejson, doesn't point to the correct place where a syntax error occurred within the config file. In such occasions use an online JSON linter. Those tend to work.
+    -   To use them though, will need to remove all comments and change `"" to ''` from the config file. run the following code in a python shell to get a valid version.
+        
+            'Read given configuration file and store internal actions etc'
+            import os
+            conffile = os.path.expanduser("~/.config/gestures.conf")
+            with open(conffile, "r") as fp:
+                lines = []
+                linenos = []
+                for num, line in enumerate(fp, 1):
+                    if not line or line[0] == '#':
+                        continue
+                    lines.append(line.replace("'", "\""))
+                    linenos.append(num)
+                print("".join(lines))
+
+
+<a id="orgcc80bd3"></a>
+
+# Compatibility
+
+-   **X11:** -   works fine.
+    -   may need to modify `orientation` if it is not tracking the screen with a touchscreen/touchpad.
+-   **wayland:** -   works if using my script `evemu_do` to generate keystrokes.
+    -   `orientation` may not work on wayland since it depends on xrandr although I haven't tested myself.
+
+
+<a id="orga87c0fd"></a>
 
 # The Code
 
 -   may need to adjust the screen size and touchpad calibration. This can be automated by looking at the dimensions as evtest is called.
 -   the knobs are as follows
-```
-    TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
-    TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
     
-    DECISION = 450 # sufficient movement to make decision on direction
-    PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
-    
-    ANGLE = 70 #x/y angle cleance
-    CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
-    
-    DEBOUNCE = 0.04  #sleep for now 40 ms, fastest tap around 25 ms , gotten from new_touch, touchpad data. in practice works well.
-    THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
-    PINCH_THRESHOLD = 100
-    
-    REP_THRES = 0.2 #need to break this TIME before REP engage
-    REP = 350 # for 3 finger stuff
-    REP_3 = 150 # for 3 finger stuff
-    REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
-    REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
-    PINCH_REP = 40
-```
+        TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
+        TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
+        
+        DECISION = 450 # sufficient movement to make decision on direction
+        PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
+        
+        ANGLE = 70 #x/y angle cleance
+        CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
+        
+        DEBOUNCE = 0.04  #sleep for now 40 ms, fastest tap around 25 ms , gotten from new_touch, touchpad data. in practice works well.
+        THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
+        PINCH_THRESHOLD = 100
+        
+        REP_THRES = 0.2 #need to break this TIME before REP engage
+        REP = 350 # for 3 finger stuff
+        REP_3 = 150 # for 3 finger stuff
+        REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
+        REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
+        PINCH_REP = 40
 
-<a id="orgce52aa6"></a>
+
+<a id="org0ba54e8"></a>
 
 # Alternatives
 
@@ -209,7 +218,7 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
     -   didn't support eight-directional gestures.
 
 
-<a id="org7647c54"></a>
+<a id="org8ee356c"></a>
 
 # Thoughts
 
@@ -218,41 +227,62 @@ to switch windows fluidly, "CTRL + ALT" are held down programmatically on a star
 something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
 
 
-<a id="org17188fd"></a>
+<a id="org4ce8fd2"></a>
 
 # TODOS
 
 
 
-<a id="org763865f"></a>
+<a id="org15a9c5d"></a>
 
-## TODO add features <code>[0/3]</code>
+## TODO add features <code>[1/3]</code>
 
--   [-]<code>[4/7]</code> enable customization by refactoring code.
+-   [-]<code>[5/9]</code> enable customization by refactoring code.
     -   [X] commands for gesture start
     -   [X] commands for gesture end
     -   [X] commands for touchscreen
     -   [X] commands for gesture update
     -   [ ] rep rate
+    -   [ ] add multi-finger pinch gestures
     -   [ ] detach implementation from personal workflow
     -   [ ] more nuanced application of gestures to different attached devices
-    -   [ ] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
--   [X] ask before doing stuff 
+    -   [X] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
+-   [X] ask before doing stuff in installation and uninstallation scripts
 -   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
 -   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
 
 
-<a id="orgc91a837"></a>
+<a id="org2edd43c"></a>
 
 ## DONE enrich readme
 
 
-<a id="orga04247d"></a>
+<a id="orgde3ddb8"></a>
 
 ## DONE Write script to fulfill dependencies automatically
 
 
-<a id="org4e52207"></a>
+<a id="org3758e23"></a>
+
+## TODO Include error handling for mistakes in config file
+
+There is already error handling for syntactic issues of the config file.
+But as noted in [this issue](https://github.com/natask/gestures/issues/2), error handling for incorrect proprieties within config is currently nonexistent. More 
+specifically, lines such as 
+
+    self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['u']['end']));
+
+do no error checking on whether proprieties "swipe", "5", "u" or "end" actually exist within the config file.
+
+
+<a id="orgd426a24"></a>
+
+## TODO Create a standalone input device for this application
+
+`evemu_do` injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
+
+
+<a id="orgf3c744c"></a>
 
 ## TODO Implement C++ version
 
