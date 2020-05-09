@@ -2,3 +2,4 @@ evtest
 evemu
 daemonize
 evemu-tools
+python-pip
