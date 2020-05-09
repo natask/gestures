@@ -1,4 +1,19 @@
 #+STARTUP: noinlineimages
+#+OPTIONS: toc:nil
+#+html:<p align="center">
+#+html:<h1 align="center"><b>Gestures</b></h1>
+#+html:<p align="center"><b>Gesture Application for Linux supporting up to 5 finger gestures on Touchscreen and Touchpad.</b></p>
+#+html:<p align="center">
+#+html:<img src="https://img.shields.io/github/license/natask/gestures">
+#+html:<img src="https://img.shields.io/github/repo-size/natask/gestures">
+#+html:<img src="https://img.shields.io/github/languages/top/natask/gestures">
+#+html:<br>
+#+html:<img src="https://img.shields.io/github/issues/natask/gestures">
+#+html:<img src="https://img.shields.io/github/issues-closed/natask/gestures">
+#+html:<img src="https://img.shields.io/github/v/release/natask/gestures?sort=semver">
+#+html:</p>
+#+html:</p>
+#+TOC: headlines 3
 #+CAPTION: Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
 [[file:gestures.gif]]
 * Motivation 
@@ -428,39 +443,55 @@ PINCH_REP = 40
  the current implementation suits my use case very well so I am in no hurry to customize. With that said, I would like to implement a fully customizable version of this. A C++ version would be good as well although current performance is more than enough. 
 something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
 :END:
-* TODOS 
+* Versioning
+:PROPERTIES:
+:ID:       3e572ffb-c51b-4155-9f05-169381538d03
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-08 Fri 22:35:13]
+:END:
+:NOTES:
+- this will be based upon Major and Minor completions in [[TODOS]].
+:END:
+* TODO [3/8] TODOS 
 :PROPERTIES:
 :ID:       a0f0322f-5cee-46b0-acb1-82c5122bf600
 :END:
 :RESOURCES:
 :END:
 :LOGBOOK:
+- State "TODO"       from              [2020-05-08 Fri 22:41:57]
 - Newly Created           [2020-01-17 Fri 03:06:38]
 :END:
-** TODO add features [0/3]
+** TODO [5/9] enable customization by refactoring code.
+*** DONE commands for gesture start
+*** DONE commands for gesture end
+*** DONE commands for touchscreen
+*** DONE commands for gesture update
+*** TODO rep rate
+*** TODO add multi-finger pinch gestures
+*** TODO detach implementation from personal workflow
+*** TODO more nuanced application of gestures to different attached devices
+*** DONE add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
+** DONE ask before doing stuff in installation and uninstallation scripts
+** TODO [1/3] configuration syntax
+*** DONE implement JSON config file support.
+*** TODO use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
+*** TODO use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
+** TODO Create a standalone input device for this application 
 :PROPERTIES:
-:ID:       3bc8e684-d676-46fc-b972-7b9226d417f6
+:ID:       3bbc9266-1f97-49ea-979e-f49787edc944
 :END:
 :RESOURCES:
 :END:
 :LOGBOOK:
-- State "TODO"       from "NEXT"       [2020-03-02 Mon 04:58:17]
-- State "TODO"       from              [2020-01-17 Fri 03:07:08]
-- Newly Created           [2020-01-17 Fri 03:06:59]
+- Newly Created           [2020-05-03 Sun 13:13:14]
 :END:
-- [-][4/7] enable customization by refactoring code.
-  - [X] commands for gesture start
-  - [X] commands for gesture end
-  - [X] commands for touchscreen
-  - [X] commands for gesture update
-  - [ ] rep rate 
-  - [ ] detach implementation from personal workflow
-  - [ ] more nuanced application of gestures to different attached devices
-  - [X] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
-- [X]  ask before doing stuff in installation and uninstallation scripts 
-- [ ] use [[https://github.com/bulletmark/libinput-gestures][libinput-gestures ]]config file syntax.
-- [ ] use [[https://github.com/iberianpig/fusuma][fusuma]] config file syntax.
-
+:NOTES:
+=evemu_do= injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
+:END:
 ** DONE enrich readme  
 CLOSED: [2020-02-04 Tue 23:35:13]
 :PROPERTIES:
@@ -499,18 +530,6 @@ specifically, lines such as
 self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['u']['end']));
 #+end_src
 do no error checking on whether proprieties "swipe", "5", "u" or "end" actually exist within the config file.
-:END:
-** TODO Create a standalone input device for this application 
-:PROPERTIES:
-:ID:       3bbc9266-1f97-49ea-979e-f49787edc944
-:END:
-:RESOURCES:
-:END:
-:LOGBOOK:
-- Newly Created           [2020-05-03 Sun 13:13:14]
-:END:
-:NOTES:
-=evemu_do= injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
 :END:
 ** TODO Implement C++ version
 :PROPERTIES:

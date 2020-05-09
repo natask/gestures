@@ -1,28 +1,69 @@
+<p align="center">
+
+<h1 align="center"><b>Gestures</b></h1>
+
+<p align="center"><b>Gesture Application for Linux supporting up to 5 finger gestures on Touchscreen and Touchpad.</b></p>
+
+<p align="center">
+
+<img src="https://img.shields.io/github/license/natask/gestures">
+
+<img src="https://img.shields.io/github/repo-size/natask/gestures">
+
+<img src="https://img.shields.io/github/languages/top/natask/gestures">
+
+<br>
+
+<img src="https://img.shields.io/github/issues/natask/gestures">
+
+<img src="https://img.shields.io/github/issues-closed/natask/gestures">
+
+<img src="https://img.shields.io/github/v/release/natask/gestures?sort=semver">
+
+</p>
+
+</p>
+
 
 # Table of Contents
 
-1.  [Motivation](#org43ddc30)
-2.  [Features](#org746ad1f)
-3.  [Dependencies](#org0d6bc7b)
-4.  [Installation/Uninstallation](#org4725c45)
-5.  [Customization](#org136a8e0)
-6.  [Debugging](#orgbc50cff)
-7.  [Compatibility](#orgcc80bd3)
-8.  [The Code](#orga87c0fd)
-9.  [Alternatives](#org0ba54e8)
-10. [Thoughts](#org8ee356c)
-11. [TODOS](#org4ce8fd2)
-    1.  [add features <code>[1/3]</code>](#org15a9c5d)
-    2.  [enrich readme](#org2edd43c)
-    3.  [Write script to fulfill dependencies automatically](#orgde3ddb8)
-    4.  [Include error handling for mistakes in config file](#org3758e23)
-    5.  [Create a standalone input device for this application](#orgd426a24)
-    6.  [Implement C++ version](#orgf3c744c)
+1.  [Motivation](#orgaf5849b)
+2.  [Features](#orgbcf9726)
+3.  [Dependencies](#org302f373)
+4.  [Installation/Uninstallation](#orgbf76685)
+5.  [Customization](#org913325a)
+6.  [Debugging](#orgc74900e)
+7.  [Compatibility](#org3e72a58)
+8.  [The Code](#orgc163661)
+9.  [Alternatives](#org8196bbf)
+10. [Thoughts](#org1116dfa)
+11. [Versioning](#org96c52ef)
+12. [<code>[3/8]</code> TODOS](#orga80ebe5)
+    1.  [<code>[5/9]</code> enable customization by refactoring code.](#org9e9aafc)
+        1.  [commands for gesture start](#org957d429)
+        2.  [commands for gesture end](#org32ea67c)
+        3.  [commands for touchscreen](#orgd3a404b)
+        4.  [commands for gesture update](#orgb8547d5)
+        5.  [rep rate](#orgeee76e8)
+        6.  [add multi-finger pinch gestures](#org45801db)
+        7.  [detach implementation from personal workflow](#org99dffe0)
+        8.  [more nuanced application of gestures to different attached devices](#orga1fc416)
+        9.  [add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"](#orgdaa7b4b)
+    2.  [ask before doing stuff in installation and uninstallation scripts](#orgb33a1f0)
+    3.  [<code>[1/3]</code> configuration syntax](#org8ad18aa)
+        1.  [implement JSON config file support.](#orga8dfb0c)
+        2.  [use libinput-gestures config file syntax.](#org88279e9)
+        3.  [use fusuma config file syntax.](#orgbcde194)
+    4.  [Create a standalone input device for this application](#org4924a94)
+    5.  [enrich readme](#orga8d8b24)
+    6.  [Write script to fulfill dependencies automatically](#org3e097c8)
+    7.  [Include error handling for mistakes in config file](#orgec9ea9a)
+    8.  [Implement C++ version](#org28ac510)
 
 ![img](gestures.gif "Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures")
 
 
-<a id="org43ddc30"></a>
+<a id="orgaf5849b"></a>
 
 # Motivation
 
@@ -37,7 +78,7 @@
 So I wrote this.
 
 
-<a id="org746ad1f"></a>
+<a id="orgbcf9726"></a>
 
 # Features
 
@@ -55,7 +96,7 @@ So I wrote this.
 -   **Compatibility with both X11 and Wayland:** -   works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, `evemu_d0` is based on `evemu` and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 
 
-<a id="org0d6bc7b"></a>
+<a id="org302f373"></a>
 
 # Dependencies
 
@@ -68,7 +109,7 @@ So I wrote this.
 -   **default dependencies (if running default configuration):** -   **evemu:** need evemu-do (alternative to xdotool that I wrote) in $PATH.
 
 
-<a id="org4725c45"></a>
+<a id="orgbf76685"></a>
 
 # Installation/Uninstallation
 
@@ -85,7 +126,7 @@ So I wrote this.
     -   asks before doing removing user from input group and specially deleting config file as it could be costly.
 
 
-<a id="org136a8e0"></a>
+<a id="org913325a"></a>
 
 # Customization
 
@@ -144,7 +185,7 @@ So I wrote this.
         -   **(device level tag):** -   can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 
 
-<a id="orgbc50cff"></a>
+<a id="orgc74900e"></a>
 
 # Debugging
 
@@ -169,7 +210,7 @@ So I wrote this.
                 print("".join(lines))
 
 
-<a id="orgcc80bd3"></a>
+<a id="org3e72a58"></a>
 
 # Compatibility
 
@@ -179,7 +220,7 @@ So I wrote this.
     -   `orientation` may not work on wayland since it depends on xrandr although I haven't tested myself.
 
 
-<a id="orga87c0fd"></a>
+<a id="orgc163661"></a>
 
 # The Code
 
@@ -207,7 +248,7 @@ So I wrote this.
         PINCH_REP = 40
 
 
-<a id="org0ba54e8"></a>
+<a id="org8196bbf"></a>
 
 # Alternatives
 
@@ -218,7 +259,7 @@ So I wrote this.
     -   didn't support eight-directional gestures.
 
 
-<a id="org8ee356c"></a>
+<a id="org1116dfa"></a>
 
 # Thoughts
 
@@ -227,42 +268,112 @@ So I wrote this.
 something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
 
 
-<a id="org4ce8fd2"></a>
+<a id="org96c52ef"></a>
 
-# TODOS
+# Versioning
 
-
-
-<a id="org15a9c5d"></a>
-
-## TODO add features <code>[1/3]</code>
-
--   [-]<code>[5/9]</code> enable customization by refactoring code.
-    -   [X] commands for gesture start
-    -   [X] commands for gesture end
-    -   [X] commands for touchscreen
-    -   [X] commands for gesture update
-    -   [ ] rep rate
-    -   [ ] add multi-finger pinch gestures
-    -   [ ] detach implementation from personal workflow
-    -   [ ] more nuanced application of gestures to different attached devices
-    -   [X] add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
--   [X] ask before doing stuff in installation and uninstallation scripts
--   [ ] use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
--   [ ] use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
+-   this will be based upon Major and Minor completions in [12](#orga80ebe5).
 
 
-<a id="org2edd43c"></a>
+<a id="orga80ebe5"></a>
+
+# TODO <code>[3/8]</code> TODOS
+
+
+
+<a id="org9e9aafc"></a>
+
+## TODO <code>[5/9]</code> enable customization by refactoring code.
+
+
+<a id="org957d429"></a>
+
+### DONE commands for gesture start
+
+
+<a id="org32ea67c"></a>
+
+### DONE commands for gesture end
+
+
+<a id="orgd3a404b"></a>
+
+### DONE commands for touchscreen
+
+
+<a id="orgb8547d5"></a>
+
+### DONE commands for gesture update
+
+
+<a id="orgeee76e8"></a>
+
+### TODO rep rate
+
+
+<a id="org45801db"></a>
+
+### TODO add multi-finger pinch gestures
+
+
+<a id="org99dffe0"></a>
+
+### TODO detach implementation from personal workflow
+
+
+<a id="orga1fc416"></a>
+
+### TODO more nuanced application of gestures to different attached devices
+
+
+<a id="orgdaa7b4b"></a>
+
+### DONE add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"
+
+
+<a id="orgb33a1f0"></a>
+
+## DONE ask before doing stuff in installation and uninstallation scripts
+
+
+<a id="org8ad18aa"></a>
+
+## TODO <code>[1/3]</code> configuration syntax
+
+
+<a id="orga8dfb0c"></a>
+
+### DONE implement JSON config file support.
+
+
+<a id="org88279e9"></a>
+
+### TODO use [libinput-gestures ](https://github.com/bulletmark/libinput-gestures)config file syntax.
+
+
+<a id="orgbcde194"></a>
+
+### TODO use [fusuma](https://github.com/iberianpig/fusuma) config file syntax.
+
+
+<a id="org4924a94"></a>
+
+## TODO Create a standalone input device for this application
+
+`evemu_do` injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
+
+
+<a id="orga8d8b24"></a>
 
 ## DONE enrich readme
 
 
-<a id="orgde3ddb8"></a>
+<a id="org3e097c8"></a>
 
 ## DONE Write script to fulfill dependencies automatically
 
 
-<a id="org3758e23"></a>
+<a id="orgec9ea9a"></a>
 
 ## TODO Include error handling for mistakes in config file
 
@@ -275,14 +386,7 @@ specifically, lines such as
 do no error checking on whether proprieties "swipe", "5", "u" or "end" actually exist within the config file.
 
 
-<a id="orgd426a24"></a>
-
-## TODO Create a standalone input device for this application
-
-`evemu_do` injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
-
-
-<a id="orgf3c744c"></a>
+<a id="org28ac510"></a>
 
 ## TODO Implement C++ version
 
