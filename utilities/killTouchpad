@@ -1,0 +1,4 @@
+#!/bin/bash
+#libinput-gestures-setup stop
+#pkill -f "python3.*4fingertap"
+pkill -f "python3.*gestur*"

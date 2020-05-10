@@ -1,0 +1,24 @@
+#!/bin/bash
+if [[ -n "$1" ]]; then
+  pkill -f "evtest";
+  pkill -f "btmon";
+  
+  pkill -f "python.*gesture.*";
+  #gestures & disown;
+  set_orientation & disown; #this restarts gestures
+
+
+
+  pkill -f "python.*pen_bluetooth";
+  pen_bluetooth & disown;
+  pkill -f "sticky_keys";
+  sticky_keys;
+  kt;
+  #pkill pend;
+  #pend; //using gnome keyboard shortcut module with XmodMap
+  pkill -f "python.*pen_eraser";
+  pen_eraser & disown;
+  
+else
+  daemonize "$0" execute
+fi

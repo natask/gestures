@@ -1,0 +1,11 @@
+#!/bin/bash
+# gnome -> toggles whether the window-switcher only shows applications in current workspace or all workspaces.
+val=$(gsettings get org.gnome.shell.window-switcher current-workspace-only)
+if [ "$val" == "true" ]; then
+   setval=false
+else
+   setval=true
+fi
+gsettings set org.gnome.shell.window-switcher current-workspace-only "$setval"
+
+

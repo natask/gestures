@@ -32,8 +32,20 @@ echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
 cat py_requirements | xargs -n 1 sudo pip3 install
 
 # place files in corresponding locations
-echo "Placing gestures evemu_do getConfig.py orientation in ${install_location}."
-sudo cp gestures evemu_do getConfig.py orientation ${install_location}
+echo "Placing gestures getConfig.py in ${install_location}."
+sudo cp gestures getConfig.py ${install_location}
+
+while true; do
+    echo "Should I install utilities, $(ls -m utilities), in ${install_location}? Recommended for default operation."
+    read -p "(y/n):" choice
+    case "$choice" in 
+        y|Y )  echo "Placing $(ls -m utilities) in ${install_location}.";sudo cp $(ls -d utilities/*) ${install_location}; break;;
+      n|N ) echo "Skipping utilities placement."; break;;
+      * ) echo "Please answer y or n.";;
+    esac
+done
+
+
 if test -f "${config_location}/gestures.conf"; then
     while true; do
         echo "Config file exists. override (saves backup as gestures.conf.bak)?" 

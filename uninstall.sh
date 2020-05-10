@@ -42,12 +42,10 @@ while true; do
 done
 
 # remove placed files
-echo "Removing placed files gestures evemu_do getConfig.py and orientation"
+echo "Removing placed files gestures, getConfig.py, $(ls -m utilities) from ${install_location}."
 sudo rm -i ${install_location}/gestures 
-sudo rm -i ${install_location}/evemu_do 
 sudo rm -i ${install_location}/getConfig.py
-sudo rm -i ${install_location}/orientation
-
+xargs -I {} -d"\n" -n 1 -ra <( ls utilities ) sudo rm -i ${install_location}/{}
 ## remove config file
 while true; do
     echo "Remove configuration file (~/.config/gesture.conf)? Warning: will need to rewrite to get back." 

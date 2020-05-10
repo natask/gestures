@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import subprocess
+
+def main():
+	window_name = subprocess.getoutput("xdotool getwindowfocus getwindowname").lower()
+	xournal = "xournal" in window_name; #"Xournal"
+	stylus_labs = "stylus labs write" in window_name;#"Stylus Labs Write"
+	gedit = "gedit" in window_name;
+	if stylus_labs or xournal or gedit:
+		subprocess.Popen("evemu_do ctrl+s Alt+F4".split());
+	else:
+		subprocess.Popen("evemu_do Alt+F4".split());	
+	
+
+
+if __name__ == '__main__':
+	main()

@@ -1,0 +1,51 @@
+#!/bin/bash
+#inverted -> left -> normal -> right -> inverted
+state="$(orientation)"
+#[ "${state}" == 'inverted' ] && xrandr --output eDP1 --rotate left || ([ "${state}" == 'left' ] && xrandr --output eDP1 --rotate normal || ([ "${state}" == 'right' ] && xrandr --output eDP1 --rotate inverted || xrandr --output eDP1 --rotate right));
+#sleep 2
+#xrandr-invert-colors;
+touchpad=$(xinput | awk '/Touchpad/ {print $7}' | grep -oP [0-9]+) #xinput list --id-only "ipts 1B96:005E Touchscreen"
+libinput_enabled=false
+gestures_enabled=true
+
+case "${state}" in
+'left')
+  xinput set-prop "$touchpad" --type=float "Coordinate Transformation Matrix" 0 -1 0 1 0 0 0 0 1
+  if [ "$libinput_enabled" = true ]; then
+    cp ~/.config/libinput-gestures.conf_left ~/.config/libinput-gestures.conf
+    libinput-gestures-setup restart
+  fi
+
+  ;;
+'(normal')
+  xinput set-prop ${touchpad} --type=float "Coordinate Transformation Matrix" 1 0 0 0 1 0 0 0 1
+  if [ "$libinput_enabled" = true ]; then
+    cp ~/libinput_enabledfig/libinput-gestures.conf_normal ~/.config/libinput-gestures.conf
+    libinput-gestures-setup restart
+
+  fi
+
+  ;;
+'right')
+  xinput set-prop ${touchpad} --type=float "Coordinate Transformation Matrix" 0 1 0 -1 0 0 0 0 1
+  if [ "$libinput_enabled" = true ]; then
+    cp ~/libinput_enabledfig/libinput-gestures.conf_right ~/.config/libinput-gestures.conf
+    libinput-gestures-setup restart
+
+  fi
+
+  ;;
+'inverted')
+  xinput set-prop ${touchpad} --type=float "Coordinate Transformation Matrix" -1 0 0 0 -1 0 0 0 1
+  if [ "$libinput_enabled" = true ]; then
+    cp ~/libinput_enabledfig/libinput-gestures.conf_inverted ~/.config/libinput-gestures.conf
+    libinput-gestures-setup restart
+
+  fi
+
+  ;;
+esac
+
+if [ "$gestures_enabled" = true ]; then
+   restartTouchpad;
+fi  

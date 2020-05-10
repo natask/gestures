@@ -1,0 +1,10 @@
+#!/bin/bash
+if [[ -n "$1" ]]; then #if $1 not empty
+    pkill -f "evtest";
+    pkill -f "python.*gesture.*";
+    gestures & disown;
+    #pkill pend;
+    #pend; //using gnome keyboard shortcut module with XmodMap
+else
+  daemonize "$0" execute
+fi

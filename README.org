@@ -1,5 +1,5 @@
 #+STARTUP: noinlineimages
-#+OPTIONS: toc:nil
+#+OPTIONS: toc:nil ^:nil
 #+html:<p align="center">
 #+html:<h1 align="center"><b>Gestures</b></h1>
 #+html:<p align="center"><b>Gesture Application for Linux supporting up to 5 finger gestures on Touchscreen and Touchpad.</b></p>
@@ -61,7 +61,7 @@ So I wrote this.
 - Orientation adjustment ::
   - using the script =orientation=, can figure out the orientation of screen to adjust both touchscreen and touchpad gestures. Script needs to be restarted for updates to take effect.  
 - Compatibility with both X11 and Wayland ::
-  - works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, =evemu_d0= is based on =evemu= and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
+  - works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, =evemu_do= is based on =evemu= and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 * Dependencies 
 :PROPERTIES:
 :ID:       96ea91ca-f6d0-47f2-bdaa-52dd6903122b
@@ -358,6 +358,46 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     #+end_example
 
 :END:
+
+* Utilities
+:PROPERTIES:
+:ID:       f9b115f4-eb6b-4644-bc84-c174abf680d0
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-10 Sun 13:00:09]
+:END:
+:NOTES:
+- utilities are scripts that enhance your default experience. They are placed in /usr/local/bin by the installation script.
+- evemu_do ::
+  - script that generates keyboard events. Much like xdotool.
+- orientation ::
+  - script that figures out the orientation of screen.
+- flip ::
+  - flips screen.
+  - mapped to a down fiver finger swipe.
+- killTouchpad :: 
+  - kills the running gesture application.
+- reset_keyboard ::
+  - resets all held down.
+  - uses both evemu_do and xkbmap.
+  - mapped to a right+up five finger swipe.
+- restartTouchpadAndPen ::
+  - restarts the touchpad and pen (surface book stuff) in an intelligent way.
+  - uses set_orientation and restartTouchpad.
+  - mapped to right+down five finger swipe.
+  - set_orientation ::
+    - sets the orientation of touchpad to match the orientation of screen. 
+  - restartTouchpad ::
+    - restarts Touchpad.
+- save_and_close ::
+  - closes application through Alt+F4, saves a select few applications before closing.
+  - mapped to right+down four finger swipe.
+- toggle_global_window_switcher ::
+  - toogles whether window switcher shows windows from all workspaces or just the current workspace.
+  - mapped to up five finger swipe.
+:END:
 * Compatibility
 :PROPERTIES:
 :ID:       7698007d-2270-43e5-be18-487db198b985
@@ -373,7 +413,8 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
   - may need to modify =orientation= if it is not tracking the screen with a touchscreen/touchpad.
 - wayland ::
   - works if using my script =evemu_do= to generate keystrokes.
-  - =orientation= may not work on wayland since it depends on xrandr although I haven't tested myself. 
+  - =orientation= may not work on wayland since it depends on xrandr although I haven't tested myself.
+  - The default four finger gestures clash with four finger and five finger gestures. They are also not configurable unlike the three finger gestures and can't be disabled. For reliable use, disabling these in within this script for touchpads is the best option. This and lack of support for sticky keys is the reason I don't use wayland. hopefully The gnome wayland team will make it optional.
 :END:
 * The Code
 :PROPERTIES:

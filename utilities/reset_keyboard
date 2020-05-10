@@ -1,0 +1,7 @@
+#!/bin/bash
+evemu_do Alt up;
+evemu_do ctrl up;
+evemu_do shift up;
+evemu_do super up;
+xkbset -sticky;
+xkbset sticky;
