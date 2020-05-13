@@ -16,6 +16,53 @@
 #+TOC: headlines 3
 #+CAPTION: Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures
 [[file:gestures.gif]]
+
+* Table of Contents                                                     :TOC:
+:PROPERTIES:
+:ID:       52ea1b55-54af-4858-9d77-1772a1961f09
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-12 Tue 21:49:27]
+:END:
+:NOTES:
+
+:END:
+- [[#motivation][Motivation]]
+- [[#features][Features]]
+- [[#dependencies][Dependencies]]
+- [[#installationuninstallation][Installation/Uninstallation]]
+- [[#customization][Customization]]
+- [[#debugging][Debugging]]
+- [[#utilities][Utilities]]
+- [[#compatibility][Compatibility]]
+- [[#the-code][The Code]]
+- [[#alternatives][Alternatives]]
+- [[#thoughts][Thoughts]]
+- [[#versioning][Versioning]]
+- [[#38-todos][TODOS]]
+  - [[#59-enable-customization-by-refactoring-code][enable customization by refactoring code.]]
+    - [[#commands-for-gesture-start][commands for gesture start]]
+    - [[#commands-for-gesture-end][commands for gesture end]]
+    - [[#commands-for-touchscreen][commands for touchscreen]]
+    - [[#commands-for-gesture-update][commands for gesture update]]
+    - [[#rep-rate][rep rate]]
+    - [[#add-multi-finger-pinch-gestures][add multi-finger pinch gestures]]
+    - [[#detach-implementation-from-personal-workflow][detach implementation from personal workflow]]
+    - [[#more-nuanced-application-of-gestures-to-different-attached-devices][more nuanced application of gestures to different attached devices]]
+    - [[#add-debugging-notes-about-fixing-config-file-use-online-json-linter-if-the-interal-json-linter-doesnt-lead-to-debug-point][add debugging notes about fixing config file (use online JSON linter if the interal JSON linter doesn't lead to debug point)"]]
+  - [[#ask-before-doing-stuff-in-installation-and-uninstallation-scripts][ask before doing stuff in installation and uninstallation scripts]]
+  - [[#13-configuration-syntax][configuration syntax]]
+    - [[#implement-json-config-file-support][implement JSON config file support.]]
+    - [[#use-libinput-gestures-config-file-syntax][use libinput-gestures config file syntax.]]
+    - [[#use-fusuma-config-file-syntax][use fusuma config file syntax.]]
+  - [[#create-a-standalone-input-device-for-this-application][Create a standalone input device for this application]]
+  - [[#enrich-readme][enrich readme]]
+  - [[#write-script-to-fulfill-dependencies-automatically][Write script to fulfill dependencies automatically]]
+  - [[#include-error-handling-for-mistakes-in-config-file][Include error handling for mistakes in config file]]
+  - [[#implement-c-version][Implement C++ version]]
+
 * Motivation 
 :PROPERTIES:
 :ID:       d6ce66b4-caba-44f0-83a1-016c386249fa
@@ -43,13 +90,19 @@ So I wrote this.
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 07:37:48]
 :END:
+- Light dependencies and Driver agnostic ::
+  - Reads raw output from touchpad and touchscreen to construct gestures.
+  - This means it has no dependency on =libinput=, =synaptics= or =touchegg=.
+  - As a corollary, It can function when any of the touch-pad drivers are active.
+- Compatibility with both X11 and Wayland ::
+  - works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, =evemu_do= is based on =evemu= and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 - Vanilla gestures ::
   features present in [[https://github.com/bulletmark/libinput-gestures][libinput-gestures]] and [[https://github.com/iberianpig/fusuma][fusuma]].
+- Tap gestures ::
+  This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
 - 5 finger gestures :: 
   This means that you can place 5 fingers on the touchpad and that is recognized as another class of gestures. BTN_TOOL_QUINTTAP must supported. This feature must supported by your driver + touchpad.
   check by running =evtest /dev/input/$(cat /proc/bus/input/devices | grep -iA 5 'touchpad' |grep -oP 'event[0-9]+') | grep BTN_TOOL_QUINTTAP=. if it prints a line containing ~"BTN_TOOL_QUINTTAP"~, your touchpad+driver support it.
-- Tap gestures ::
-  This means that tapping the touchpad with 4 or 5 fingers is recognized as a gesture.
 - Touchscreen gestures ::
   Extend gestures to touchscreen.
 - Fluid gestures :: 
@@ -60,8 +113,6 @@ So I wrote this.
   to switch windows fluidly, "CTRL + ALT" are held down programmatically on a start gesture event, then depending on which direction the user is swiping while fingers are still on the touchpad, dynamically generate direction commands. Then when the user raises their fingers, which is an end gesture event, the "CTRL + ALT" are released programmatically.
 - Orientation adjustment ::
   - using the script =orientation=, can figure out the orientation of screen to adjust both touchscreen and touchpad gestures. Script needs to be restarted for updates to take effect.  
-- Compatibility with both X11 and Wayland ::
-  - works on wayland as well as X11 if using the default keystroke generator. The keystroke generator, =evemu_do= is based on =evemu= and injects keyboard events directly into a connected device. In the future, may create an input device solely for this application.
 * Dependencies 
 :PROPERTIES:
 :ID:       96ea91ca-f6d0-47f2-bdaa-52dd6903122b
@@ -99,7 +150,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :END:
 :NOTES:
 - installation ::
-  
+  - git clone
   - run ./install.sh
     - it should handle most things.
     - may need to install =daemonize= by hand. If on Arch, I recommend =daemonize-git= from AUR.
@@ -107,6 +158,14 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - adds user to the input group.
     - what you truly need from this repo are gestures.config, gestures, getConfig.py. Everything else is just dependencies.
     - asks to replace config file if found. Saves a backup as default to avoid pain.
+  - bash script to install this application ::
+  #+begin_src bash
+    cd ~
+    git clone git@github.com:natask/gestures.git
+    cd gestures
+    ./install.sh
+  #+end_src
+
 - uninstallation ::
   
   - run ./uninstall.sh
