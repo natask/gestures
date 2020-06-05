@@ -34,6 +34,7 @@ all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
 # generic gesture worker
 class Worker(threading.Thread):
+
     """ A worker thread that takes directory names from a queue, finds all
         files in them recursively and reports the result.
 
@@ -69,6 +70,7 @@ class Worker(threading.Thread):
             #print("def: ", event)
             if event["type"] == "finger_start":
                 #print("finger_start")
+
                 self.finger_start(event);
             if event["type"] == "finger_update":
                 #print("finger_update")
@@ -429,7 +431,11 @@ class Worker(threading.Thread):
 
 
             if(no_slots == 3):
-                if(self.gesture["type"] == "pinch_i"):
+                if (not self.gesture["type"]):
+                    #print("3 finger tap");
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['t']));
+
+                elif(self.gesture["type"] == "pinch_i"):
                     #print(self.gestures["pinch"]['3']['i']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['3']['i']['end']));
                 elif(self.gesture["type"] == "pinch_o"):
@@ -621,7 +627,6 @@ def main():
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]
         threading.Thread(target=test, args=[device_event_name, TOUCHPAD_CALIBRATION, device]).start() #change here to use evemu-record
-
     device = "touchscreen"
     result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
@@ -630,10 +635,13 @@ def main():
         result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
         filter_result = list(filter(lambda x: x.find("event") != -1,result))
         device = "touchscreen" 
+    #print(filter_result)
     for device_event in filter_result:
        device_event_index = device_event.find("event")
        device_event_name = device_event[device_event_index:]
        threading.Thread(target=test, args=[device_event_name, TOUCHSCREEN_CALIBRATION, device]).start() #change here to use evemu-record
+       #print(device_event_name, "j")
+
     return 1;
 
 def test(device_event_name, factor, dev):
@@ -656,7 +664,6 @@ def test(device_event_name, factor, dev):
     swap_x_y = True if("right" == orientation or "left" == orientation) else False;
     #print(swap_x_y)
     cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
-
     for line in cmd.stdout:
         # implement debouncing and switching from one to another
 

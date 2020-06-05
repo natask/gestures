@@ -41,7 +41,7 @@
 - [[#alternatives][Alternatives]]
 - [[#thoughts][Thoughts]]
 - [[#versioning][Versioning]]
-- [[#38-todos][TODOS]]
+- [[#28-todos][TODOS]]
 
 * Motivation 
 :PROPERTIES:
@@ -535,13 +535,14 @@ something like nested gestures will be intersting where swipes are nested in a h
 :NOTES:
 - this will be based upon Major and Minor completions in [[TODOS]].
 :END:
-* TODO [3/8] TODOS 
+* TODO [2/8] TODOS 
 :PROPERTIES:
 :ID:       a0f0322f-5cee-46b0-acb1-82c5122bf600
 :END:
 :RESOURCES:
 :END:
 :LOGBOOK:
+- State "TODO"       from "TODO"       [2020-05-25 Mon 11:33:42]
 - State "TODO"       from              [2020-05-08 Fri 22:41:57]
 - Newly Created           [2020-01-17 Fri 03:06:38]
 :END:
@@ -572,8 +573,7 @@ something like nested gestures will be intersting where swipes are nested in a h
 :NOTES:
 =evemu_do= injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
 :END:
-** DONE enrich readme  
-CLOSED: [2020-02-04 Tue 23:35:13]
+** TODO [0/1] enrich readme  
 :PROPERTIES:
 :ID:       2f6a4067-3cd9-42ca-8003-64f5ca0f471d
 :END:
@@ -581,6 +581,19 @@ CLOSED: [2020-02-04 Tue 23:35:13]
 :END:
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:15:49]
+:END:
+*** TODO update customization readme [/]
+SCHEDULED: <2020-05-25 Mon> 
+:PROPERTIES:
+:ID:       292eb3c4-786d-4a07-a67d-387e25246b5f
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-25 Mon 11:32:53]
+:END:
+:NOTES:
+
 :END:
 ** DONE Write script to fulfill dependencies automatically 
 CLOSED: [2020-02-04 Tue 23:35:22]
@@ -622,3 +635,16 @@ do no error checking on whether proprieties "swipe", "5", "u" or "end" actually 
 - Newly Created           [2020-02-03 Mon 04:26:25]
 :END:
 
+** TODO end gesture when adding fingers [/]
+SCHEDULED: <2020-05-25 Mon> 
+:PROPERTIES:
+:ID:       2946ea62-13ad-442a-8892-0764345bef9a
+:END:
+:RESOURCES:
+:END:
+:LOGBOOK:
+- Newly Created           [2020-05-25 Mon 11:34:03]
+:END:
+:NOTES:
+- this should be the default behavior. currently it doesn't run the end gesture sequence and continues on executing the next gesture. Nice for closing alt-tab with super+w but I still don't think it should be the default behavior. The default behavior should end the gesture before continuing onto the next. 
+:END:
