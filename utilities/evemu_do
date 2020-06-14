@@ -43,13 +43,14 @@ for keyset in keys:
 		for key in keyset:
 			#print(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1 --sync")
                         subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1".split())
-                        time.sleep(0.008) #delay to prevent triggering key press and hold down unintendedly
+                        #time.sleep(0.007) #delay to prevent triggering key press and hold down unintendedly
 
 
 	if (direction == "up" or both_directions):
 		for key in reversed(keyset):
                         subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0".split())
-                        time.sleep(0.008)
+                        subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0".split())
+                        #time.sleep(0.007)evemu-event /dev/input/event14  --type EV_KEY --code KEY_A --value 1
 	
 	subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_SYN --code SYN_REPORT --value 1".split()) #true events fire --value 0
 ##!/bin/bash
