@@ -627,8 +627,8 @@ def main():
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]
         threading.Thread(target=test, args=[device_event_name, TOUCHPAD_CALIBRATION, device]).start() #change here to use evemu-record
-    device = "touchscreen"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    device = "touchscreen|IPTS touch"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{device}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
     if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
         device = "400 0 0 0 0 0"
