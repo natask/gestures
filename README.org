@@ -14,7 +14,7 @@
 #+html:</p>
 #+html:</p>
 #+TOC: headlines 3
-[[https://www.youtube.com/watch?v=ckpyTz88pfE][https://i9.ytimg.com/vi/ckpyTz88pfE/mq2.jpg?sqp=CNDWz_sF&rs=AOn4CLCIAqWnOxw6ZDeQCga02xg2JkWe3g]]
+[[https://www.youtube-nocookie.com/embed/ckpyTz88pfE][https://i9.ytimg.com/vi/ckpyTz88pfE/mq2.jpg?sqp=CNDWz_sF&rs=AOn4CLCIAqWnOxw6ZDeQCga02xg2JkWe3g]]
 
 Demonstrating fluid gestures, five finger gestures, tap gestures and touchscreen gestures.
 
