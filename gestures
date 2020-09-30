@@ -9,6 +9,8 @@ import sys
 import getConfig 
 from math import tan
 from math import pi
+DEBUG = 0 # variable to enable debug mode
+
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
@@ -19,7 +21,7 @@ ANGLE = 70 #x/y angle cleance
 CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
 
 DEBOUNCE = 0.04  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
-THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
+THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
@@ -29,8 +31,14 @@ REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes oversteppi
 REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
+DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
 all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
+
+def print(s):
+    """redefine print to print only when debug is on."""
+    if (DEBUG):
+        __builtins__.print(s)
 
 # generic gesture worker
 class Worker(threading.Thread):
@@ -162,12 +170,12 @@ class Worker(threading.Thread):
         self.update_status(slot, event[slot],max_dis);
 
         #print(self.gesture["total"]);
-        #print(self.status_dis);
+        print(self.gesture);
 
         # pick which type of guesture is currenlty executing after all fingures have been verified
         no_slots = len(self.gesture["slots"]);
         if (not self.gesture["slots"][slot]["moved"]):
-            self.gesture["slots"][slot]["moved"] = self.gesture["slots"][slot]["y-cum"] ** 2 + self.gesture["slots"][slot]["x-cum"] ** 2 > THRESHOLD
+            self.gesture["slots"][slot]["moved"] = self.gesture["slots"][slot]["y-cum"] ** 2 + self.gesture["slots"][slot]["x-cum"] ** 2 > THRESHOLD_SQUARED
             self.gesture["total"]["moved"] += self.gesture["slots"][slot]["moved"];
 
         elif (not self.gesture["type"]):
@@ -179,11 +187,17 @@ class Worker(threading.Thread):
 
                 #if (x_cum + y_cum > PINCH_DECISION):
                 if(no_slots == 2):
-                    #print(f"dis_cum = {dis_cum}")
-                    #print(f"x_cum + y_cum = {x_cum + y_cum}")
+                    print(f"dis_cum = {dis_cum}")
+                    print(f"x_cum + y_cum = {x_cum + y_cum}")
+                    print(f"x_cum = {x_cum}")
+                    print(f"y_cum = {y_cum}")
+                    print(f'0 = {self.gesture["slots"]["0"]["y-cum"] ** 2 + self.gesture["slots"]["0"]["x-cum"] ** 2}')
+                    print(f'1 = {self.gesture["slots"]["1"]["y-cum"] ** 2 + self.gesture["slots"]["1"]["x-cum"] ** 2}')
                     if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
                         self.gesture["type"] = "no_gesture";
-                    elif(abs(dis_cum) > PINCH_THRESHOLD ):
+                    elif(abs(dis_cum) > PINCH_THRESHOLD and
+                        self.gesture["slots"]["0"]["y-cum"] ** 2 + self.gesture["slots"]["0"]["x-cum"] ** 2  > DEADZONE_SQUARED and
+                        self.gesture["slots"]["1"]["y-cum"] ** 2 + self.gesture["slots"]["1"]["x-cum"] ** 2  > DEADZONE_SQUARED): # added deadzone 
                         if(dis_cum > 0): #pinch in
                             self.gesture["type"] += "pinch_i";
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['i']['start']));
@@ -754,6 +768,7 @@ if __name__ == "__main__":
     # if call comes with arguments, pass only the first one. if it doesn't, start normal orientation operation
     # maybe implement builtin daemonization
     if len(sys.argv) > 1:
+        DEBUG=1 if sys.argv[1].lower() == "debug" else 0;
         main()
     else:
         subprocess.Popen(["daemonize", sys.argv[0], "execute"])
