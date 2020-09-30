@@ -191,13 +191,10 @@ class Worker(threading.Thread):
                     print(f"x_cum + y_cum = {x_cum + y_cum}")
                     print(f"x_cum = {x_cum}")
                     print(f"y_cum = {y_cum}")
-                    print(f'0 = {self.gesture["slots"]["0"]["y-cum"] ** 2 + self.gesture["slots"]["0"]["x-cum"] ** 2}')
-                    print(f'1 = {self.gesture["slots"]["1"]["y-cum"] ** 2 + self.gesture["slots"]["1"]["x-cum"] ** 2}')
                     if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
                         self.gesture["type"] = "no_gesture";
                     elif(abs(dis_cum) > PINCH_THRESHOLD and
-                        self.gesture["slots"]["0"]["y-cum"] ** 2 + self.gesture["slots"]["0"]["x-cum"] ** 2  > DEADZONE_SQUARED and
-                        self.gesture["slots"]["1"]["y-cum"] ** 2 + self.gesture["slots"]["1"]["x-cum"] ** 2  > DEADZONE_SQUARED): # added deadzone 
+                        self.out_of_deadzone): # added deadzone 
                         if(dis_cum > 0): #pinch in
                             self.gesture["type"] += "pinch_i";
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['i']['start']));
@@ -608,6 +605,15 @@ class Worker(threading.Thread):
                 max_dis = max(max_dis, cur_dis)
         return max_dis;
 
+    def out_of_deadzone():
+        """check if out of deadzone."""
+        are_all_fin_out_of_deadzone = True;
+        for fin in self.status:
+           fin_move = self.gesture["slots"][fin]["y-cum"] ** 2 + self.gesture["slots"][fin]["x-cum"] ** 2 
+           print(fin_move)
+           is_fin_out_of_deadzone = fin_move > DEADZONE_SQUARED
+           are_all_fin_out_of_deadzone = are_all_fin_out_of_deadzone and is_fin_out_of_deadzone
+        return are_all_fin_out_of_deadzone 
 # define and start gestures  
 
 # N: Name="ipts 1B96:005E"
