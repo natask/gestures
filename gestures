@@ -193,8 +193,8 @@ class Worker(threading.Thread):
                     print(f"y_cum = {y_cum}")
                     if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
                         self.gesture["type"] = "no_gesture";
-                    elif(abs(dis_cum) > PINCH_THRESHOLD and
-                        self.out_of_deadzone): # added deadzone 
+                    elif(abs(dis_cum) > PINCH_THRESHOLD and 
+                        self.out_of_deadzone()): # added deadzone 
                         if(dis_cum > 0): #pinch in
                             self.gesture["type"] += "pinch_i";
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['i']['start']));
@@ -605,7 +605,7 @@ class Worker(threading.Thread):
                 max_dis = max(max_dis, cur_dis)
         return max_dis;
 
-    def out_of_deadzone():
+    def out_of_deadzone(self):
         """check if out of deadzone."""
         are_all_fin_out_of_deadzone = True;
         for fin in self.status:
