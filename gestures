@@ -14,7 +14,7 @@ DEBUG = 0 # variable to enable debug mode
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 450 # sufficient movement to make decision on direction
+DECISION = 550 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
 
 ANGLE = 70 #x/y angle cleance
@@ -34,6 +34,12 @@ PINCH_REP = 40
 DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
 all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
+
+def try_or_set(expression, val, gestures=False):
+    try:
+        return eval(expression);
+    except Exception:
+        return val; 
 
 def print(s):
     """redefine print to print only when debug is on."""
@@ -64,6 +70,9 @@ class Worker(threading.Thread):
         self.gestures = gestures
         self.gesture_queue = []
         self.rep_start = 0
+        self.pinch_deadzone_enabled = try_or_set("all_gestures[\"pinch_deadzone_enabled\"] == \"True\" ",True)
+        self.pinch_deadzone_enabled = try_or_set("gestures[\"pinch_deadzone_enabled\"] == \"True\" ", self.pinch_deadzone_enabled, gestures=gestures)
+        print(self.pinch_deadzone_enabled)
         self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved": 0, "dis-cum": 0} , "slots" : {}} # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum, moved, dis-cum
 
     def run(self):
@@ -194,7 +203,7 @@ class Worker(threading.Thread):
                     if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
                         self.gesture["type"] = "no_gesture";
                     elif(abs(dis_cum) > PINCH_THRESHOLD and 
-                        self.out_of_deadzone()): # added deadzone 
+                        ((not self.pinch_deadzone_enabled) or self.out_of_deadzone())): # added deadzone 
                         if(dis_cum > 0): #pinch in
                             self.gesture["type"] += "pinch_i";
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['i']['start']));
@@ -647,6 +656,7 @@ def main():
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]
         threading.Thread(target=test, args=[device_event_name, TOUCHPAD_CALIBRATION, device]).start() #change here to use evemu-record
+    print(f"Handlers for touchpads: {filter_result}")
     device = "touchscreen|IPTS touch"
     result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{device}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
@@ -655,7 +665,7 @@ def main():
         result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
         filter_result = list(filter(lambda x: x.find("event") != -1,result))
         device = "touchscreen" 
-    #print(filter_result)
+    print(f"Handlers for touchscreens:  {filter_result}")
     for device_event in filter_result:
        device_event_index = device_event.find("event")
        device_event_name = device_event[device_event_index:]
