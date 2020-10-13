@@ -119,7 +119,8 @@ So I wrote this.
     used by =orientation= for orientation detection. 
 - default dependencies (if running default configuration) :: 
   - evemu ::
-    need evemu-do (alternative to xdotool that I wrote) in $PATH.
+    need evemu_do (alternative to xdotool that I wrote) in $PATH.
+    evemu_do is currently deprecated. Only recommended on wayland. It doesn't work when no keyboards are attached to the machine.
 
 * Installation/Uninstallation
 :PROPERTIES:
@@ -168,7 +169,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :NOTES:
 - default customization ::
   - the default customization is my config.
-  - uses extensively =evemu_do=, a script I wrote to replace =xdotool=. Much less buggy and also works on wayland.
+  - uses extensively =evemu_do=, a script I wrote to replace =xdotool=. Much less buggy and also works on wayland. It is currently deprecated and only recommended for wayland users. Caveat is that It doesn't work when no keyboards are attached to the machine.
   - =evemu_do= works much like xdotool but only for keyboard inputs.
     - =evemu_do tab= presses tab (also supports =evemu_do key tab=)
     - =evemu_do keydown tab= holds down tab
@@ -208,28 +209,33 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
   - specific gestures for touchpad and touchscreen
 - example ::
    #+begin_src js 
-     {'touchpad': 
-      {'swipe': {
-          '3': {
-              'l' : {'start': ['evemu_do keydown alt', 'evemu_do tab'], 'update': {'l': ["evemu_do Left"], 'r': ["evemu_do Right"], 'u': ["evemu_do Up"], 'd': ["evemu_do Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do keyup alt'], 'rep': ''},
-          }
-      },
-       'pinch': {
-           '2': {
-               'i' : {'start': ['evemu_do keydown control', 'evemu_do equal'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''},
-               'o' : {'start': ['evemu_do keydown control', 'evemu_do minus'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''}
+  {'pinch_deadzone_enabled' : 'True',
+   'touchpad' :{
+       'pinch_deadzone_enabled' : 'False',
+       {'swipe': {
+           '3': {
+               'l' : {'start': ['evemu_do keydown alt', 'evemu_do tab'], 'update': {'l': ["evemu_do Left"], 'r': ["evemu_do Right"], 'u': ["evemu_do Up"], 'd': ["evemu_do Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['evemu_do keyup alt'], 'rep': ''},
            }
+       },
+        'pinch': {
+            '2': {
+                'i' : {'start': ['evemu_do keydown control', 'evemu_do equal'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''},
+                'o' : {'start': ['evemu_do keydown control', 'evemu_do minus'], 'update': {'i': ['evemu_do plus'], 'o': ['evemu_do minus']}, 'end': ['evemu_do keyup ctrl'], 'rep': ''}
+            }
+        }
        }
-      }
 #+end_src
 - breakdown ::
+  - pinch_deadzone_enabled ::
+    - enables pinch. It can be set globally for all devices and/or specifically for a device. specific defination overrides global defination.
+    - if it is not set, the default is =True=.
   - (touchscreen, touchpad) ::
     - make a set of gestures apply to touchpad or touchscreen 
   - (swipe,pinch) ::
     - define if the gesture is a swipe or a pinch 
   - (3,4,5) ::
     - define the number of fingers to activate the gesture
-  - ('t', 'l', 'r',...,'ru') :: define tap and the 8 directions a swipe can be in.
+  - ('t', 'l', 'r',...,'ru') :: define *t*ap and the 8 directions (*l*eft, *r*ight, *l*eft-*r*ight, ...) a swipe can be in.
   - ('i', 'o') :: define pinch in and pinch out.
   - (start,end) ::
     - what to do when the gesture starts or ends.
@@ -239,7 +245,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - (rep) ::
       - how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
     - (device level tag) ::
-      - can already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
+      - already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 :END:
 * Debugging
 :PROPERTIES:
@@ -252,14 +258,14 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :END:
 :NOTES:
 - Debugging script ::
-  running the script with anything after it in the terminal will run it without using demonize. Which is to  say that all errors will be logged out to terminal.
+  running the script with anything after it in the terminal will run it without using demonize (as a child of the terminal).To log out events and errors, run with =debug= following the script name as follows.
   e.g
   #+begin_src bash
   gestures debug 
   #+end_src
 - Syntactic issues in Config file ::
   - There are times when the builtin syntax checker for the config file, simplejson, doesn't point to the correct place where a syntax error occurred within the config file. In such occasions use an online JSON linter. Those tend to work.
-  - To use them though, will need to remove all comments and change ="" to ''= from the config file. run the following code in a python shell to get a valid version.
+  - To use them though, you will need to remove all comments and change ="" to ''= from the config file. run the following code in a python shell to get a valid version. Then copy paste the results to any JSON linter.
     #+begin_src python :results output
       'Read given configuration file and store internal actions etc'
       import os
@@ -277,61 +283,65 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 
     #+RESULTS:
     #+begin_example
-    {"touchpad" :{
+    {"pinch_deadzone_enabled" : "False",
+    "touchpad" :{
+    "pinch_deadzone_enabled" : "False",
     "swipe": {
 
     "3": {
-        "l" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
-        "r" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+w"], "rep": ""},
-        "ld": {"start": ["evemu_do keydown control","evemu_do Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""},
-        "ru": {"start": ["evemu_do keydown control","evemu_do Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""}
+        "t" : [],
+        "l" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
+        "r" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+w"], "rep": ""},
+        "ld": {"start": ["xdotool keydown control","xdotool key Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""},
+        "ru": {"start": ["xdotool keydown control","xdotool key Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""}
      },
 
     "4": {
-        "t" : ["evemu_do super+w"],
-        "l" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Right"],"update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup ctrl+alt"], "rep": ""},
-        "r" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "u" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "d" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+n"], "rep": ""},
+        "t" : ["xdotool key super+w"],
+        "l" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Right"],"update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup ctrl+alt"], "rep": ""},
+        "r" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "u" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "d" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+n"], "rep": ""},
         "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
-        "ld": {"start": ["evemu_do keydown alt","evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Left"], "ru": ["evemu_do Right"]}, "end": ["evemu_do keyup Alt"], "rep": ""},
-        "ru": {"start": ["evemu_do keydown alt","evemu_do Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["evemu_do Left"], "ru": ["evemu_do Down"]}, "end": [], "rep": ""}
+        "ld": {"start": ["xdotool keydown alt","xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Left"], "ru": ["xdotool key Right"]}, "end": ["xdotool keyup Alt"], "rep": ""},
+        "ru": {"start": ["xdotool keydown alt","xdotool key Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["xdotool key Left"], "ru": ["xdotool key Down"]}, "end": [], "rep": ""}
      },
     "5": {
         "t" : ["open_dictionary"],
-        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
-        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+alt+t"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["toggle_global_window_switcher"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["flip"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["restartTouchpadAndPen"], "rep": ""},
-        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
-        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["reset_keyboard"], "rep": ""}
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+1"], "rep": ""},
+        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+4"], "rep": ""},
+        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+2"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+5"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+3"], "rep": ""},
+        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+3"], "rep": ""},
+        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+2"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+1"], "rep": ""}
          }
      },
+
 
      "pinch": {
 
      "2": {
-        "i" : {"start": ["evemu_do keydown control", "evemu_do equal"], "update": {"i": ["evemu_do plus"], "o": ["evemu_do minus"]}, "end": ["evemu_do keyup ctrl"], "rep": ""},
-        "o" : {"start": ["evemu_do keydown control", "evemu_do minus"], "update": {"i": ["evemu_do plus"], "o": ["evemu_do minus"]}, "end": ["evemu_do keyup ctrl"], "rep": ""}
+        "i" : {"start": ["xdotool keydown control", "zoom-in-type"], "update": {"i": ["zoom-in-type"], "o": ["xdotool key minus"]}, "end": ["xdotool keyup ctrl"], "rep": ""},
+        "o" : {"start": ["xdotool keydown control", "xdotool key minus"], "update": {"i": ["zoom-in-type"], "o": ["xdotool key minus"]}, "end": ["xdotool keyup ctrl"], "rep": ""}
      },
      "3": {
-        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
      },
     "4": {
-        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
      },
     "5": {
-        "i" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
+        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
+        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
         } 
      }
     },
@@ -341,34 +351,35 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     "swipe": {
 
     "3": {
-        "l" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
-        "r" : {"start": ["evemu_do keydown alt", "evemu_do tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup alt"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do super+i"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+w"], "rep": ""},
-        "ld": {"start": ["evemu_do keydown control","evemu_do Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""},
-        "ru": {"start": ["evemu_do keydown control","evemu_do Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Page_Up"], "ru": ["evemu_do Page_Down"]}, "end": ["evemu_do keyup control"], "rep": ""}
+        "t" : ["xdotool key shift+insert"],
+        "l" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
+        "r" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
+        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
+        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+t"], "rep": ""},
+        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+w"], "rep": ""},
+        "ld": {"start": ["xdotool keydown control","xdotool key Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""},
+        "ru": {"start": ["xdotool keydown control","xdotool key Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""}
      },
 
     "4": {
-        "t" : ["evemu_do super+w"],
-        "l" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Right"],"update": {"l": ["evemu_do Left"], "r": ["evemu_do Right"], "u": ["evemu_do Up"], "d": ["evemu_do Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do keyup ctrl+alt"], "rep": ""},
-        "r" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "u" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "d" : {"start": ["evemu_do keydown ctrl+alt", "evemu_do Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+shift+n"], "rep": ""},
+        "t" : ["xdotool key super+w"],
+        "l" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Right"],"update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup ctrl+alt"], "rep": ""},
+        "r" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "u" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "d" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
+        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+n"], "rep": ""},
         "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
-        "ld": {"start": ["evemu_do keydown alt","evemu_do Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["evemu_do Left"], "ru": ["evemu_do Right"]}, "end": ["evemu_do keyup Alt"], "rep": ""},
-        "ru": {"start": ["evemu_do keydown alt","evemu_do Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["evemu_do Left"], "ru": ["evemu_do Down"]}, "end": [], "rep": ""}
+        "ld": {"start": ["xdotool keydown alt","xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Left"], "ru": ["xdotool key Right"]}, "end": ["xdotool keyup Alt"], "rep": ""},
+        "ru": {"start": ["xdotool keydown alt","xdotool key Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["xdotool key Left"], "ru": ["xdotool key Down"]}, "end": [], "rep": ""}
      },
     "5": {
         "t" : ["open_dictionary"],
         "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
-        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+alt+t"], "rep": ""},
+        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+alt+t"], "rep": ""},
         "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["toggle_global_window_switcher"], "rep": ""},
         "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["flip"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["evemu_do ctrl+t"], "rep": ""},
+        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+t"], "rep": ""},
         "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["restartTouchpadAndPen"], "rep": ""},
         "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
         "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["reset_keyboard"], "rep": ""}
@@ -393,7 +404,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
         "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
         "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
         } 
-
+    }
     }
     }
 
@@ -414,6 +425,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - utilities are scripts that enhance your default experience. They are placed in /usr/local/bin by the installation script.
 - evemu_do ::
   - script that generates keyboard events. Much like xdotool.
+  - currently deprecated but recommended if using wayland.
 - orientation ::
   - script that figures out the orientation of screen.
 - flip ::

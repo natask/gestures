@@ -72,7 +72,7 @@ class Worker(threading.Thread):
         self.rep_start = 0
         self.pinch_deadzone_enabled = try_or_set("all_gestures[\"pinch_deadzone_enabled\"] == \"True\" ",True)
         self.pinch_deadzone_enabled = try_or_set("gestures[\"pinch_deadzone_enabled\"] == \"True\" ", self.pinch_deadzone_enabled, gestures=gestures)
-        print(self.pinch_deadzone_enabled)
+        print(f"Pinch deadzone is enabled: {self.pinch_deadzone_enabled}.")
         self.gesture = {"type": "", "total": {"x-cum": 0, "y-cum": 0, "moved": 0, "dis-cum": 0} , "slots" : {}} # keys: type, moved, slot (1-9), total ; slot and total keys: x-cum, y-cum, moved, dis-cum
 
     def run(self):
@@ -267,10 +267,8 @@ class Worker(threading.Thread):
                     if(no_slots == 4):
                         if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) or y_cum > x_cum * tan(ANGLE * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal_vertical";
-                            self.gesture_queue.append("evemu_do ctrl+alt down".split()); #xdotool was causing issue when esc was pressed beforehand
                             if (x_cum > y_cum):
                                 if (self.gesture["total"]["x-cum"] >= 0):
-                                    #self.gesture_queue.append("evemu_do Right".split()); #xdotool removed because was hanging on subprocess.call but not subprocess.Popen. p
                                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['r']['start']));
                                 else:
                                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['l']['start']));
@@ -355,7 +353,7 @@ class Worker(threading.Thread):
                             #self.gesture["total"]["x-cum"] += REP;
                             self.gesture["total"]["x-cum"] = 0;
 
-                        # y is messured postive when moving down the touchpad
+                        # y is measured positive when moving down the touchpad
                         if(self.gesture["total"]["y-cum"] >= REP_3):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['update']['d']));
                             # self.gesture_queue.append("evemu_do DOWN".split());
@@ -650,21 +648,22 @@ class Worker(threading.Thread):
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
     device = "touchpad"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{device}' | grep event").split()
+    search_string = "touchpad"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{search_string}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
     for device_event in filter_result:
         device_event_index = device_event.find("event")
         device_event_name = device_event[device_event_index:]
         threading.Thread(target=test, args=[device_event_name, TOUCHPAD_CALIBRATION, device]).start() #change here to use evemu-record
     print(f"Handlers for touchpads: {filter_result}")
-    device = "touchscreen|IPTS touch"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{device}' | grep event").split()
+    device = "touchscreen"
+    search_string = "touchscreen|IPTS touch"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{search_string}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
     if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
-        device = "400 0 0 0 0 0"
-        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{device}' | grep event").split()
+        search_string = "400 0 0 0 0 0"
+        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{search_string}' | grep event").split()
         filter_result = list(filter(lambda x: x.find("event") != -1,result))
-        device = "touchscreen" 
     print(f"Handlers for touchscreens:  {filter_result}")
     for device_event in filter_result:
        device_event_index = device_event.find("event")
