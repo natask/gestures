@@ -20,7 +20,7 @@ PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finge
 ANGLE = 70 #x/y angle cleance
 CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
 
-DEBOUNCE = 0.04  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
+DEBOUNCE = 0.01  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
 THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
@@ -84,9 +84,9 @@ class Worker(threading.Thread):
         while True:
             # get messages(dequeue from message queue) and do approperate action
             event = self.q.get(True)
-            #print("def: ", event)
+            print(f"def: {event}")
             if event["type"] == "finger_start":
-                #print("finger_start")
+                print("finger_start")
 
                 self.finger_start(event);
             if event["type"] == "finger_update":
@@ -123,6 +123,7 @@ class Worker(threading.Thread):
         # end gesture
         #self.gesture_end(event["time"]);
         ## restart debounce
+        #print("here")
         self.debounce = float(event["time"]);
 
         ## restart gesture params
@@ -437,7 +438,8 @@ class Worker(threading.Thread):
         x_cum = self.gesture["total"]["x-cum"];
         y_cum = self.gesture["total"]["y-cum"];
         no_slots = len(self.gesture["slots"]);
-        #print(self.gesture);
+        print(self.gesture);
+        print(f"float(clock) - self.debounce >= DEBOUNCE : {float(clock) - self.debounce} >= {DEBOUNCE} : {float(clock) - self.debounce >= DEBOUNCE} ");
         if (float(clock) - self.debounce >= DEBOUNCE):
             if(no_slots == 2):
                 if(self.gesture["type"] == "pinch_i"):
@@ -697,6 +699,7 @@ def test(device_event_name, factor, dev):
         # implement debouncing and switching from one to another
 
         # removes startup printing
+        #print(status_dict)
         line_arr = line.split()
         #sys.stderr.write(str(line_arr))
         #sys.stderr.write("\n")
@@ -711,7 +714,6 @@ def test(device_event_name, factor, dev):
             if state == "-1":
                 try:
                     del status_dict[slot]
-
                 except:
                     del status_dict[slot]
 
@@ -757,7 +759,8 @@ def test(device_event_name, factor, dev):
 
         if event == "--------------" or event == "(MSC_TIMESTAMP),":
             continue
-
+        print(f"update: {update}")
+        print(f"slot: {slot}")
         if update:
             if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] <  1:
                 update = False
@@ -776,8 +779,9 @@ def test(device_event_name, factor, dev):
             update = False;
 
             q.put({"type": finger_type, "slot": slot, "time": time, slot: {"id": status_dict[slot]["id"], "x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
-
-        #print(f"time = {time}, state = {state}, event = {event}")
+            
+        print(status_dict)    
+        print(f"time = {time}, state = {state}, event = {event}")
 if __name__ == "__main__":
     import sys
     # if call comes with arguments, pass only the first one. if it doesn't, start normal orientation operation
