@@ -63,7 +63,7 @@ class Worker(threading.Thread):
     def __init__(self, q, gestures):
         super(Worker, self).__init__()
         self.q = q
-        self.status = {} #slots :   {"id": status_dict[slot]["id"], "x" :x , "y" : y}
+        self.status = {} #slots :   {"x" :x , "y" : y}
         self.status_dis = 0
         self.last_gesture_start = -1
         self.debounce = 0
@@ -677,7 +677,7 @@ def main():
 
 def test(device_event_name, factor, dev):
     #make sure to start with a single finger when the base re-attaches because slot and tracking id won't fire before position
-    status_dict = {"0":{"id": -1, "x_updated": 0, "y_updated": 0}, "1":{"id": -1, "x_updated": 0, "y_updated": 0}, "2": {"id": -1, "x_updated": 0, "y_updated": 0}, "3":{"id": -1, "x_updated": 0, "y_updated": 0}, "4": {"id": -1, "x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
+    status_dict = {"0":{"x_updated": 0, "y_updated": 0}, "1":{"x_updated": 0, "y_updated": 0}, "2": {"x_updated": 0, "y_updated": 0}, "3":{"x_updated": 0, "y_updated": 0}, "4": {"x_updated": 0, "y_updated": 0}} #when the touchpad is restarted issues arise because (ABS_MT_TRACKING_ID), isn't called before x or y , this solve
     slot = "0"
     update = False
 
@@ -721,7 +721,7 @@ def test(device_event_name, factor, dev):
                 q.put({"type": "finger_remove", "removed_slot": slot,"time": time })
                 #print(status_dict)
             else:
-                status_dict[slot] = {"id": state, "x_updated": 0, "y_updated": 0}
+                status_dict[slot] = {"x_updated": 0, "y_updated": 0}
 
                 # debounce worker when finger is added
                 # q.put({"type": "debounce"})
@@ -778,7 +778,7 @@ def test(device_event_name, factor, dev):
 
             update = False;
 
-            q.put({"type": finger_type, "slot": slot, "time": time, slot: {"id": status_dict[slot]["id"], "x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
+            q.put({"type": finger_type, "slot": slot, "time": time, slot: {"x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
             
         print(status_dict)    
         print(f"time = {time}, state = {state}, event = {event}")
