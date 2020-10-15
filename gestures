@@ -20,7 +20,7 @@ PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finge
 ANGLE = 70 #x/y angle cleance
 CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
 
-DEBOUNCE = 0.01  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
+DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
 THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
@@ -444,7 +444,7 @@ class Worker(threading.Thread):
         print("")
         print("Worker")
         print(self.gesture);
-        print(f"float(clock) - self.debounce >= DEBOUNCE : {float(clock) - self.debounce} >= {DEBOUNCE} : {float(clock) - self.debounce >= DEBOUNCE} ");
+        print(f"float(clock) - self.debounce >= DEBOUNCE : {float(clock)} - {self.debounce} >= {DEBOUNCE} : {float(clock) - self.debounce >= DEBOUNCE} ");
         print("")
         if (float(clock) - self.debounce >= DEBOUNCE):
             if(no_slots == 2):
@@ -741,6 +741,8 @@ def test(device_event_name, factor, dev):
 
         if "(ABS_MT_SLOT)," == event:
             slot = state
+            if slot not in status_dict:
+                status_dict[slot] = {"x_updated": 0, "y_updated": 0}
         print("")
         print(f'slot != "-1", {slot} != "-1", {slot != "-1"}')
         print(f"status dict: {status_dict}")
