@@ -65,11 +65,11 @@ class Worker(threading.Thread):
         self.q = q
         self.status = {} #slots :   {"x" :x , "y" : y}
         self.status_dis = 0
-        self.last_gesture_start = -1
         self.debounce = 0
         self.gestures = gestures
         self.gesture_queue = []
         self.rep_start = 0
+        self.last_command_is_gesture_end = False
         self.pinch_deadzone_enabled = try_or_set("all_gestures[\"pinch_deadzone_enabled\"] == \"True\" ",True)
         self.pinch_deadzone_enabled = try_or_set("gestures[\"pinch_deadzone_enabled\"] == \"True\" ", self.pinch_deadzone_enabled, gestures=gestures)
         print(f"Pinch deadzone is enabled: {self.pinch_deadzone_enabled}.")
@@ -127,6 +127,7 @@ class Worker(threading.Thread):
         #self.gesture_end(event["time"]);
         ## restart debounce
         #print("here")
+        self.last_command_is_gesture_end = False;
         self.debounce = float(event["time"]);
 
         ## restart gesture params
@@ -160,6 +161,7 @@ class Worker(threading.Thread):
         """ Update started gesture
         """
         # update state for updated finger
+        self.last_command_is_gesture_end = False;
         slot = event["slot"];
 
         # gesture must be updated before status because need to capture difference between last and now
@@ -589,13 +591,15 @@ class Worker(threading.Thread):
         """
 
         # execute tap based gesture if any other gesture had not been started
-        if(len(self.gesture_queue) == 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
-            # do tap gesture according to finger
-            pass;
-
-        # end gesture
-        self.gesture_end(event["time"]);
-
+        if not self.last_command_is_gesture_end:
+            self.last_command_is_gesture_end = True;
+            if(len(self.gesture_queue) == 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
+                # do tap gesture according to finger
+                pass;
+            
+            # end gesture
+            self.gesture_end(event["time"]);
+            
         # update state
         removed_slot = event["removed_slot"];
 
@@ -709,6 +713,7 @@ def test(device_event_name, factor, dev):
         line_arr = line.split()
         #sys.stderr.write(str(line_arr))
         #sys.stderr.write("\n")
+        print(f"line_array : {line_arr}")
         if (len(line_arr) < 2 or line_arr[1] != "time"):
             continue
 
@@ -780,6 +785,10 @@ def test(device_event_name, factor, dev):
         print("")
         print(f"update: {update}")
         print(f"slot: {slot}")
+        print(f"status_dict before end: {status_dict}")    
+        print(f"status before end: time = {time}, state = {state}, event = {event}")
+        print("")
+
         if update:
             if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] <  1:
                 update = False
