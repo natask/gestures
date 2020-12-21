@@ -25,10 +25,10 @@ THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x a
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
-REP = 350 # for 3 finger stuff
+REP = 350 # for 3 finger stuff (depreciated)
 REP_3 = 150 # for 3 finger stuff
-REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
-REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
+REP_4x= 150 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
+REP_4 = 150 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
 DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
@@ -660,8 +660,8 @@ class Worker(threading.Thread):
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
     device = "touchpad"
-    search_string = "touchpad"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iA 5 '{search_string}' | grep event").split()
+    search_string = "touchpad|Wacom Intuos5 touch S Finger|Wacom Intuos5 touch S \(WL\) Finger"
+    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{search_string}' | grep event").split()
     filter_result = list(filter(lambda x: x.find("event") != -1,result))
     for device_event in filter_result:
         device_event_index = device_event.find("event")
