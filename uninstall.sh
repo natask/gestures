@@ -21,14 +21,14 @@ case ${pkgM} in
     auto=-y
     ;;
 esac
-## cat, stdbuf are builtin, may need to install daemonize by hand
-echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
-xargs -d"\n" -n 1 -ra <( cat pkg_requirements ) sudo ${pkgM} ${uninstall}
-
 ## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
 ## uninstalls on global python
 echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
-xargs -d"\n" -n 1 -ra <( cat py_requirements ) sudo pip3 uninstall
+xargs -d"\n" -n 1 -I{} -ra <( cat py_requirements ) sh -c "echo; echo Uninstalling {} through pip; sudo pip3 uninstall {};"
+
+## cat, stdbuf are builtin, may need to install daemonize by hand
+echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
+xargs -d"\n" -n 1 -I{} -ra <( cat pkg_requirements ) sh -c "echo; echo Uninstalling {}; sudo ${pkgM} ${uninstall} {}"
 
 # remove user from input group
 while true; do

@@ -24,12 +24,12 @@ esac
 
 ## cat, stdbuf are builtin, may need to install daemonize by hand
 echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
-cat pkg_requirements | xargs -n 1 sudo ${pkgM} ${install} ${auto} 
+cat pkg_requirements | xargs -n 1 -I{} sh -c "echo; echo Installing {}; sudo ${pkgM} ${install} ${auto} {}"
 
 ## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
 ## installs on global python
 echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
-cat py_requirements | xargs -n 1 sudo pip3 install
+cat py_requirements | xargs -n 1 -I{} sh -c "echo; echo Installing {} through pip; sudo pip3 install {};"
 
 
 echo ""
