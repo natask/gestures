@@ -17,8 +17,8 @@ TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 DECISION = 550 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
 
-ANGLE = 70 #x/y angle cleance
-CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
+ANGLE = 75 #x/y angle cleance
+CLEARANCE = 0#clearance for not intrepreting swipes between diagonal and horizontal or vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
 THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x and y
