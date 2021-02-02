@@ -14,20 +14,20 @@ DEBUG = 0 # variable to enable debug mode
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 550 # sufficient movement to make decision on direction
-PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
+DECISION = 450 # sufficient movement to make decision on direction
+PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE = 75 #x/y angle cleance
-CLEARANCE = 0#clearance for not intrepreting swipes between diagonal and horizontal or vertical
+ANGLE_X = 20 # angle to interpret as horizontal
+ANGLE_Y = 20 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
-THRESHOLD_SQUARED = 150 # threashold to be considered a move, squared sum of x and y
+THRESHOLD_SQUARED = 150 # threshold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
 REP = 350 # for 3 finger stuff (depreciated)
 REP_3 = 150 # for 3 finger stuff
-REP_4x= 150 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
+REP_4x= 150 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being predictable
 REP_4 = 150 # for 4 finger stuff; repeat after this much x,y movement
 PINCH_REP = 40
 
@@ -41,7 +41,7 @@ def try_or_set(expression, val, gestures=False):
     except Exception:
         return val; 
 
-def print(s):
+def print(*s):
     """redefine print to print only when debug is on."""
     if (DEBUG):
         __builtins__.print(s)
@@ -225,7 +225,11 @@ class Worker(threading.Thread):
                 dis_cum =  self.gesture["total"]["dis-cum"];
                 if (x_cum + y_cum > DECISION):
                     if(no_slots == 3):
-                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
+                        print(f"x_cum = {x_cum}")
+                        print(f"y_cum = {y_cum}")
+                        print(f"horz {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}")
+                        print(f"vert {y_cum} >= {x_cum * tan((90 - ANGLE_Y) * pi/180)}")
+                        if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal";
                             self.rep_start = float(event["time"]);
                             #print(self.gestures["swipe"]['3']['l']['start']);
@@ -235,7 +239,7 @@ class Worker(threading.Thread):
                             else :
                                 # self.gesture["type"] = "swipe_r";
                                 self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['r']['start']));
-                        elif (y_cum >= x_cum * tan(ANGLE * pi/180)):
+                        elif (y_cum >= x_cum * tan((90 - ANGLE_Y) * pi/180)):
                             self.gesture["type"] = "swipe_vertical";
                             if(self.gesture["total"]["y-cum"] <= 0) :
                                 # self.gesture["type"] = "swipe_u";
@@ -243,7 +247,7 @@ class Worker(threading.Thread):
                             else :
                                 # self.gesture["type"] = "swipe_d";
                                 self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['d']['start']));
-                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                        else: # (y_cum > x_cum * tan((90 - ANGLE_Y) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
                             y_cum = self.gesture["total"]["y-cum"];
                             if(x_cum * y_cum > 0): #left up, right down
@@ -267,11 +271,8 @@ class Worker(threading.Thread):
                                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['ld']['start']));
                                 
                                 self.rep_start = float(event["time"]);
-
-                        else: #fell under CLEARANCE
-                            pass
                     if(no_slots == 4):
-                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) or y_cum > x_cum * tan(ANGLE * pi/180) ):
+                        if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) or y_cum > x_cum * tan((90 - ANGLE_Y) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal_vertical";
                             if (x_cum > y_cum):
                                 if (self.gesture["total"]["x-cum"] >= 0):
@@ -284,7 +285,7 @@ class Worker(threading.Thread):
                                 else:
                                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['u']['start']));
                             self.rep_start = float(event["time"]);
-                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                        else:#(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
                             y_cum = self.gesture["total"]["y-cum"];
                             if(x_cum * y_cum > 0): #left up, right down
@@ -306,11 +307,11 @@ class Worker(threading.Thread):
                                 self.rep_start = float(event["time"]);
 
                     if(no_slots == 5):
-                        if(y_cum <= x_cum * tan((90 - ANGLE) * pi/180) ):
+                        if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal";
-                        elif (y_cum > x_cum * tan(ANGLE * pi/180)):
+                        elif (y_cum > x_cum * tan((90 - ANGLE_Y) * pi/180)):
                             self.gesture["type"] = "swipe_vertical";
-                        elif(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                        else:#(y_cum > x_cum * tan((90 - ANGLE - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
                             self.gesture["type"] = "swipe_diagonal";
 
                     # reset because don't want to trigger again in
