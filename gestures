@@ -660,30 +660,19 @@ class Worker(threading.Thread):
 
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
-    device = "touchpad"
-    search_string = "touchpad|Wacom Intuos5 touch S Finger|Wacom Intuos5 touch S \(WL\) Finger"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{search_string}' | grep event").split()
-    filter_result = list(filter(lambda x: x.find("event") != -1,result))
-    for device_event in filter_result:
-        device_event_index = device_event.find("event")
-        device_event_name = device_event[device_event_index:]
-        threading.Thread(target=test, args=[device_event_name, TOUCHPAD_CALIBRATION, device]).start() #change here to use evemu-record
-    print(f"Handlers for touchpads: {filter_result}")
-    device = "touchscreen"
-    search_string = "touchscreen|IPTS touch"
-    result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iEA 5 '{search_string}' | grep event").split()
-    filter_result = list(filter(lambda x: x.find("event") != -1,result))
-    if(not filter_result): #handle the case where touchscreen is not within device name in newer kernels
-        search_string = "400 0 0 0 0 0"
-        result =  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -iB 5 '{search_string}' | grep event").split()
-        filter_result = list(filter(lambda x: x.find("event") != -1,result))
-    print(f"Handlers for touchscreens:  {filter_result}")
-    for device_event in filter_result:
-       device_event_index = device_event.find("event")
-       device_event_name = device_event[device_event_index:]
-       threading.Thread(target=test, args=[device_event_name, TOUCHSCREEN_CALIBRATION, device]).start() #change here to use evemu-record
-       #print(device_event_name, "j")
-
+    gesture_sources = [["TOUCHPAD", [], TOUCHPAD_CALIBRATION], ["TOUCHSCREEN", [], TOUCHSCREEN_CALIBRATION]]
+    mice_items = subprocess.getoutput("cat /proc/bus/input/devices | grep -iEB 2 mouse").split("--")
+    mice_items[0] = "\n"+ mice_items[0]
+    for gesture_source in gesture_sources:
+        for i in mice_items:
+            item = i.split("\n")
+            dev_path = item[1].split("=")[1]
+            b = subprocess.getoutput(" udevadm test-builtin input_id" + " " + dev_path + f"| grep -c {gesture_source[0]}")[-1]
+            if int(b):
+                device_event_name = item[3].split("=")[1].split(" ")[0]
+                gesture_source[1].append(device_event_name)
+                threading.Thread(target=test, args=[device_event_name, gesture_source[2], gesture_source[0].lower()]).start() #change here to use evemu-record
+        print(f"Handlers for " + gesture_source[0] + f": {gesture_source[1]}")
     return 1;
 
 def test(device_event_name, factor, dev):
