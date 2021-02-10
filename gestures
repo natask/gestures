@@ -14,7 +14,7 @@ DEBUG = 0 # variable to enable debug mode
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 450 # sufficient movement to make decision on direction
+DECISION = 150 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
 ANGLE_X = 20 # angle to interpret as horizontal
