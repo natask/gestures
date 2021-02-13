@@ -10,15 +10,16 @@ import getConfig
 from math import tan
 from math import pi
 DEBUG = 0 # variable to enable debug mode
+TYPE = [] # types that are printed
 
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 150 # sufficient movement to make decision on direction
+DECISION = 250 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE_X = 20 # angle to interpret as horizontal
-ANGLE_Y = 20 # angle to interpret as vertical
+ANGLE_X = 15 # angle to interpret as horizontal
+ANGLE_Y = 11 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
 THRESHOLD_SQUARED = 150 # threshold to be considered a move, squared sum of x and y
@@ -43,7 +44,7 @@ def try_or_set(expression, val, gestures=False):
 
 def print(*s):
     """redefine print to print only when debug is on."""
-    if (DEBUG):
+    if (DEBUG and (s[-1] in TYPE or not TYPE)):
         __builtins__.print(s)
 
 # generic gesture worker
@@ -107,7 +108,7 @@ class Worker(threading.Thread):
                 for gesture in self.gesture_queue:
                     #print(gesture)
                     try:
-                        if(gesture):
+                        if(gesture and "stop" not in TYPE):
                             subprocess.call(gesture);
                     except: 
                         print("error with:")
@@ -225,10 +226,10 @@ class Worker(threading.Thread):
                 dis_cum =  self.gesture["total"]["dis-cum"];
                 if (x_cum + y_cum > DECISION):
                     if(no_slots == 3):
-                        print(f"x_cum = {x_cum}")
-                        print(f"y_cum = {y_cum}")
-                        print(f"horz {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}")
-                        print(f"vert {y_cum} >= {x_cum * tan((90 - ANGLE_Y) * pi/180)}")
+                        print(f"x_cum = {x_cum}", "angle")
+                        print(f"y_cum = {y_cum}", "angle")
+                        print(f"horz {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}", "angle")
+                        print(f"vert {y_cum} >= {x_cum * tan((90 - ANGLE_Y) * pi/180)}", "angle")
                         if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal";
                             self.rep_start = float(event["time"]);
@@ -563,7 +564,7 @@ class Worker(threading.Thread):
         for gesture in self.gesture_queue:
             #print(gesture)
             try:
-                if(gesture):
+                if(gesture and "stop" not in TYPE):
                     if (no_slots == 5):
                         subprocess.Popen(gesture);
                     else:
@@ -807,6 +808,7 @@ if __name__ == "__main__":
     # maybe implement builtin daemonization
     if len(sys.argv) > 1:
         DEBUG=1 if sys.argv[1].lower() == "debug" else 0;
+        TYPE=sys.argv[2:];
         main()
     else:
         subprocess.Popen(["daemonize", sys.argv[0], "execute"])

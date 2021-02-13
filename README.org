@@ -263,6 +263,27 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
   #+begin_src bash
   gestures debug 
   #+end_src
+  general syntax is
+  #+begin_src bash
+  gestures debug type1 type2 ...
+  #+end_src
+  where types are symbols that are used debug conveniently
+  to print information only of a certain type
+  #+begin_src bash
+  gestures debug angle
+  #+end_src
+  valid types are angle
+
+  can also stop the script from executing gestures during debugging using
+  #+begin_src bash
+  gestures debug stop
+  #+end_src
+
+  can enable both symbols like
+  #+begin_src bash
+  gestures debug angle stop
+  #+end_src
+  order of types doesn't matter.
 - Syntactic issues in Config file ::
   - There are times when the builtin syntax checker for the config file, simplejson, doesn't point to the correct place where a syntax error occurred within the config file. In such occasions use an online JSON linter. Those tend to work.
   - To use them though, you will need to remove all comments and change ="" to ''= from the config file. run the following code in a python shell to get a valid version. Then copy paste the results to any JSON linter.
