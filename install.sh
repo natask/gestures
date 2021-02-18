@@ -6,20 +6,20 @@ autostart_location=~/.config/autostart
 # install requirements
 pkgM=$( command -v yum || command -v apt-get || command -v pamac || command -v pacman ) || echo "package manager not found"
 case ${pkgM} in
-  *pacman)
-    install=-S
-    auto=--noconfirm
-    ;;
+        *pacman)
+          install=-S
+          auto=--noconfirm
+          ;;
 
-  *pamac)
-    install=install
-    auto=--no-confirm
-    ;;
+        *pamac)
+          install=install
+          auto=--no-confirm
+          ;;
 
-  *)
-    install=install 
-    auto=-y
-    ;;
+        *)
+          install=install
+          auto=-y
+          ;;
 esac
 
 ## cat, stdbuf are builtin, may need to install daemonize by hand
@@ -58,36 +58,38 @@ while true; do
     echo "Should I install utilities, $(ls -m utilities), in ${install_location}? Recommended for default operation."
     read -p "(y/n):" choice
     case "$choice" in 
-        y|Y )  echo "Placing $(ls -m utilities) in ${install_location}.";sudo cp $(ls -d utilities/*) ${install_location}; break;;
-      n|N ) echo "Skipping utilities placement."; break;;
-      * ) echo "Please answer y or n.";;
+            y|Y )  echo "Placing $(ls -m utilities) in ${install_location}.";sudo cp $(ls -d utilities/*) ${install_location}; break;;
+            n|N ) echo "Skipping utilities placement."; break;;
+            * ) echo "Please answer y or n.";;
     esac
 done
 
 echo ""
 echo ""
 if test -f "${config_location}/gestures.conf"; then
-    while true; do
-        echo "Config file exists. override (saves backup as gestures.conf.bak)?" 
-        read -p "(y/n):" choice
-        case "$choice" in
-                y|Y )  echo "Would you like xdo-tool version (x or y) or evemu_do version (e or n)? xdo-tool version is recommended unless using wayland."
-                        read -p "([x/y]do-tool/[e/n]vemu_do):" version
-                        case "$version" in
-                                x|X|y|Y ) echo "Placing xdo-tool version of config file in ${config_location} while making a temporary backup.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_xdo_tool.conf ${config_location}/gestures.conf; break;;
-                                e|E|n|N ) echo "Placing evemu_do version of config file in ${config_location} while making a temporary backup.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_evemu_do.conf ${config_location}/gestures.conf; break;;
-                        esac; break;;
-          n|N ) echo "Skipping config file placement."; break;;
-          * ) echo "Please answer y or n.";;
-        esac
-    done
+        while true; do
+            echo "Config file exists. override (saves backup as gestures.conf.bak)?"
+            read -p "(y/n):" choice
+            case "$choice" in
+                    y|Y )  echo "Would you like xdo-tool version (x or y) or evemu_do version (e or n)? xdo-tool version is recommended unless using wayland."
+                           read -p "([x/y]do-tool/[e/n]vemu_do):" version
+                           case "$version" in
+                                   x|X|y|Y ) echo "Placing xdo-tool version of config file in ${config_location} while making a temporary backup.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_xdo_tool.conf ${config_location}/gestures.conf; break;;
+                                   e|E|n|N ) echo "Placing evemu_do version of config file in ${config_location} while making a temporary backup.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_evemu_do.conf ${config_location}/gestures.conf; break;;
+                                   * ) echo "Please answer ([x/y]do-tool/[e/n]vemu_do)";;
+                           esac; break;;
+                    n|N ) echo "Skipping config file placement."; break;;
+                    * ) echo "Please answer y or n.";;
+            esac
+        done
 else
                          echo "Would you like xdo-tool version (x or y) or evemu_do version (e or n)? xdo-tool version is recommended unless using wayland."
-                        read -p "([x/y]do-tool/[e/n]vemu_do):" version
-                        case "$version" in
-                                x|X|y|Y ) echo "Placing xdo-tool version of config file in ${config_location}.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_xdo_tool.conf ${config_location}/gestures.conf; break;;
-                                e|E|n|N ) echo "Placing evemu_do version of config file in ${config_location}.";cp ${config_location}/gestures.conf ${config_location}/gestures.conf.bak; cp gestures_evemu_do.conf ${config_location}/gestures.conf; break;;
-                        esac;
+                         read -p "([x/y]do-tool/[e/n]vemu_do):" version
+                         case "$version" in
+                                 x|X|y|Y ) echo "Placing xdo-tool version of config file in ${config_location}.";cp gestures_xdo_tool.conf ${config_location}/gestures.conf; break;;
+                                 e|E|n|N ) echo "Placing evemu_do version of config file in ${config_location}.";cp gestures_evemu_do.conf ${config_location}/gestures.conf; break;;
+                                 * ) echo "Please answer ([x/y]do-tool/[e/n]vemu_do)";;
+                         esac;
 fi
 
 echo ""

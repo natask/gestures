@@ -6,3 +6,6 @@ python3-pip
 python-pip
 xdotool
 xkbset
+setxkbmap
+python38-daemonize
+python38-pip

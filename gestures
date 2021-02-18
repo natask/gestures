@@ -15,11 +15,11 @@ TYPE = [] # types that are printed
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 250 # sufficient movement to make decision on direction
+DECISION = 350 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE_X = 15 # angle to interpret as horizontal
-ANGLE_Y = 11 # angle to interpret as vertical
+ANGLE_X = 21 # angle to interpret as horizontal
+ANGLE_Y = 21 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
 THRESHOLD_SQUARED = 150 # threshold to be considered a move, squared sum of x and y
