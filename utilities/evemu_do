@@ -2,18 +2,8 @@
 import subprocess
 import sys
 import time
-#import os
-#import os
-# >>> os.environ
 
-event_number = subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| grep -iv 'mouse'| head -n1 | grep -oP '[0-9]+'|head -n1") #in the future turn this to a envirmonetal variable # added head -n1 because grep -i matches more than one keybaord whne keyboard are connected 
-event_number = event_number if(event_number) else  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| head -n1 | grep -oP '[0-9]+'|head -n1") #fall back if no pure keyboard
-direction = "down" if sys.argv[1] == "keydown" else "up" if sys.argv[1] == "keyup" else "key" if sys.argv[1] == "key" else "null"; #check if using keydown or keyup codes at the start of command
-keys = sys.argv[2:] if direction == "down" or direction == "up" or direction == "key" else sys.argv[1:-1] if sys.argv[-1] == "down" or sys.argv[-1] == "up" else sys.argv[1:]; # check if using down or up codes at the end of command 
-direction = sys.argv[-1] if direction == "null" else direction; # set direction under appropriate format
-both_directions = direction != "down" and direction != "up";
-
-#ignore the follinwg to direct translation to evemu understandtable input
+#ignore the following to direct translation to evemu understandable input
 # xdotool key understandable input
 def alter(key):
 	key = key.lower();
@@ -29,42 +19,30 @@ def alter(key):
 	ret_val = "KEY_PAGEDOWN" 		if key == "Page_Down".lower() 	else ret_val; #
 	ret_val = "KEY_LEFTSHIFT KEY_EQUAL"	if key == "plus".lower() 	else ret_val; 
 	return ret_val.split();
-		
-keys = [[element for key in keyset.split("+") for element in alter(key)] for keyset in keys]#can change here to make it accept multiple shortcuts in one go. eg. ctrl+p ctrl+z
-#ignore the follinwg to direct translation to evemu understandtable input
-#print(keys)
-for keyset in keys:
-	#if (both_directions):
-		#for key in keyset:
-			#subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1" .split())
-			#subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0 --sync".split())
 
-	if (direction == "down" or both_directions):
-		for key in keyset:
-			#print(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1 --sync")
-                        subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1".split())
-                        time.sleep(0.008) #delay to prevent triggering key press and hold down unintendedly
+def main():
+	event_number = subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| grep -iv 'mouse'| head -n1 | grep -oP '[0-9]+'|head -n1") #in the future turn this to a environmental variable # added head -n1 because grep -i matches more than one keyboard when keyboard are connected
+	event_number = event_number if(event_number) else  subprocess.getoutput(f"cat /proc/bus/input/devices | grep -i 'sysrq'| head -n1 | grep -oP '[0-9]+'|head -n1") #fall back if no pure keyboard
+	direction = "down" if sys.argv[1] == "keydown" else "up" if sys.argv[1] == "keyup" else "key" if sys.argv[1] == "key" else "null"; #check if using keydown or keyup codes at the start of command
+	keys = sys.argv[2:] if direction == "down" or direction == "up" or direction == "key" else sys.argv[1:-1] if sys.argv[-1] == "down" or sys.argv[-1] == "up" else sys.argv[1:]; # check if using down or up codes at the end of command
+	direction = sys.argv[-1] if direction == "null" else direction; # set direction under appropriate format
+	both_directions = direction != "down" and direction != "up";
+	keys = [[element for key in keyset.split("+") for element in alter(key)] for keyset in keys]# can change here to make it accept multiple shortcuts in one go. eg. ctrl+p ctrl+z
+	#print(keys)
+	for keyset in keys:
+		if (direction == "down" or both_directions):
+			for key in keyset:
+				subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 1".split())
+				time.sleep(0.001) # Delay to prevent triggering key press and hold down unintendedly
+		if (direction == "up" or both_directions):
+			for key in reversed(keyset):
+				subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0".split())
 
+			for key in reversed(keyset):
+				subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0".split())
 
-	if (direction == "up" or both_directions):
-		for key in reversed(keyset):
-                        subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_KEY --code {key} --value 0".split())
-                        time.sleep(0.008)
-	
-	subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_SYN --code SYN_REPORT --value 1".split()) #true events fire --value 0
-##!/bin/bash
-## keycomb.sh
+				subprocess.Popen(f"evemu-event /dev/input/event{event_number} --type EV_SYN --code SYN_REPORT --value 1".split()) #true events fire --value 0
 
-#EVDEVICE=/dev/input/event$(cat /proc/bus/input/devices | grep -i 'sysrq' | grep -oP '[0-9]+')
-
-#for key in $@; do
-#    evemu-event $EVDEVICE --type EV_KEY --code KEY_$key --value 1 --sync
-#done
-
-
-## reverse order
-#if [[ "$!#" == "down" ]]; then
-#for (( idx=${#@}; idx>0; idx-- )); do
-#    evemu-event $EVDEVICE --type EV_KEY --code KEY_${!idx} --value 0 --sync
-#done
-#fi
+if __name__ == "__main__":
+	if len(sys.argv) > 1:
+		main()
