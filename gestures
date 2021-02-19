@@ -11,14 +11,15 @@ from math import tan
 from math import pi
 DEBUG = 0 # variable to enable debug mode
 TYPE = [] # types that are printed
+STOP = False # don't execute gestures, useful for debugging
 
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 350 # sufficient movement to make decision on direction
+DECISION = 500 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE_X = 21 # angle to interpret as horizontal
+ANGLE_X = 18 # angle to interpret as horizontal
 ANGLE_Y = 21 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
@@ -26,7 +27,7 @@ THRESHOLD_SQUARED = 150 # threshold to be considered a move, squared sum of x an
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
-REP = 350 # for 3 finger stuff (depreciated)
+REP_DAG = 200 # for 3 finger stuff (depreciated)
 REP_3 = 150 # for 3 finger stuff
 REP_4x= 150 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being predictable
 REP_4 = 150 # for 4 finger stuff; repeat after this much x,y movement
@@ -108,7 +109,7 @@ class Worker(threading.Thread):
                 for gesture in self.gesture_queue:
                     #print(gesture)
                     try:
-                        if(gesture and "stop" not in TYPE):
+                        if(gesture and not STOP):
                             subprocess.call(gesture);
                     except: 
                         print("error with:")
@@ -248,7 +249,7 @@ class Worker(threading.Thread):
                             else :
                                 # self.gesture["type"] = "swipe_d";
                                 self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['d']['start']));
-                        else: # (y_cum > x_cum * tan((90 - ANGLE_Y) * pi/180) and y_cum < x_cum * tan((ANGLE + CLEARANCE) * pi/180)):
+                        else: #(y_cum > x_cum * tan((90 - ANGLE_Y - CLEARANCE) * pi/180) and y_cum < x_cum * tan((ANGLE_X + CLEARANCE) * pi/180)):
                             x_cum = self.gesture["total"]["x-cum"];
                             y_cum = self.gesture["total"]["y-cum"];
                             if(x_cum * y_cum > 0): #left up, right down
@@ -272,6 +273,7 @@ class Worker(threading.Thread):
                                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['ld']['start']));
                                 
                                 self.rep_start = float(event["time"]);
+
                     if(no_slots == 4):
                         if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) or y_cum > x_cum * tan((90 - ANGLE_Y) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal_vertical";
@@ -352,86 +354,64 @@ class Worker(threading.Thread):
                         # better to zero out after a gesture is triggered
                         if(self.gesture["total"]["x-cum"] >= REP_3):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['update']['r']));
-                            # self.gesture_queue.append("evemu_do RIGHT".split());
-                            #self.gesture["total"]["x-cum"] -= REP; #better to zero out
                             self.gesture["total"]["x-cum"] = 0
                         if(self.gesture["total"]["x-cum"] <= -REP_3):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['update']['l']));
-                            # self.gesture_queue.append("evemu_do LEFT".split());
-                            #self.gesture["total"]["x-cum"] += REP;
                             self.gesture["total"]["x-cum"] = 0;
 
                         # y is measured positive when moving down the touchpad
                         if(self.gesture["total"]["y-cum"] >= REP_3):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['update']['d']));
-                            # self.gesture_queue.append("evemu_do DOWN".split());
-                            #self.gesture["total"]["y-cum"] -= REP;
                             self.gesture["total"]["y-cum"] = 0;
                         if(self.gesture["total"]["y-cum"] <= -REP_3):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['update']['u']));
-                            # self.gesture_queue.append("evemu_do UP".split());
-                            #self.gesture["total"]["y-cum"] += REP;
                             self.gesture["total"]["y-cum"] = 0;
 
                     if(self.gesture["type"] == "swipe_diagonal_//"):
-                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP):
+                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP_DAG):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['ld']['update']['ru']));
-                            # self.gesture_queue.append("evemu_do Page_Down".split());
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
 
-                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP):
+                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP_DAG):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['ld']['update']['ld']));
-                            # self.gesture_queue.append("evemu_do Page_Up".split());
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
-                            #self.gesture["total"]["y-cum"] = 0;
 
                 if(no_slots == 4):
                     if(self.gesture["type"] == "swipe_horizontal_vertical"):
                         # better to zero out after a gesture is triggered
                         if(self.gesture["total"]["x-cum"] >= REP_4x):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['l']['update']['r']));
-                            # self.gesture_queue.append("evemu_do Right".split());
-                            #self.gesture["total"]["x-cum"] -= REP; #better to zero out
                             self.gesture["total"]["x-cum"] = 0;
                             self.gesture["total"]["y-cum"] = 0;
 
                         if(self.gesture["total"]["x-cum"] <= -REP_4x):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['l']['update']['l']));
-                            # self.gesture_queue.append("evemu_do Left".split());
-                            # self.gesture["total"]["x-cum"] += REP;
                             self.gesture["total"]["x-cum"] = 0;
                             self.gesture["total"]["y-cum"] = 0;
 
                         # y is messured postive when moving down the touchpad
                         if(self.gesture["total"]["y-cum"] >= REP_4):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['l']['update']['d']));
-                            # self.gesture_queue.append("evemu_do Down".split());
-                            #self.gesture["total"]["y-cum"] -= REP;
                             self.gesture["total"]["y-cum"] = 0;
                             self.gesture["total"]["x-cum"] = 0;
 
                         if(self.gesture["total"]["y-cum"] <= -REP_4):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['l']['update']['u']));
-                            # self.gesture_queue.append("evemu_do Up".split());
-                            #self.gesture["total"]["y-cum"] += REP;
                             self.gesture["total"]["y-cum"] = 0;
                             self.gesture["total"]["x-cum"] = 0;
 
                     if(self.gesture["type"] == "swipe_diagonal_//"):
-                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP):
+                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP_DAG):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['ld']['update']['ru']));
-                            # self.gesture_queue.append("evemu_do Right".split());
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
 
-                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP):
+                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP_DAG):
                             self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['ld']['update']['ld']));
-                            # self.gesture_queue.append("evemu_do Left".split());
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
-                            #self.gesture["total"]["y-cum"] = 0;
 
         #print(self.gesture_queue)
         #print(self.gesture)
@@ -564,7 +544,7 @@ class Worker(threading.Thread):
         for gesture in self.gesture_queue:
             #print(gesture)
             try:
-                if(gesture and "stop" not in TYPE):
+                if(gesture and not STOP):
                     if (no_slots == 5):
                         subprocess.Popen(gesture);
                     else:
@@ -664,9 +644,11 @@ def main():
     gesture_sources = [["TOUCHPAD", [], TOUCHPAD_CALIBRATION], ["TOUCHSCREEN", [], TOUCHSCREEN_CALIBRATION]]
     mice_items = subprocess.getoutput("cat /proc/bus/input/devices | grep -iEB 2 mouse").split("--")
     mice_items[0] = "\n"+ mice_items[0]
+    print(f"mice_items = {mice_items}")
     for gesture_source in gesture_sources:
         for i in mice_items:
             item = i.split("\n")
+            print(f"item = {item}")
             dev_path = item[1].split("=")[1]
             b = subprocess.getoutput(" udevadm test-builtin input_id" + " " + dev_path + f"| grep -c {gesture_source[0]}")[-1]
             if int(b):
@@ -809,6 +791,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         DEBUG=1 if sys.argv[1].lower() == "debug" else 0;
         TYPE=sys.argv[2:];
+        if "stop" in TYPE:
+            TYPE.remove("stop");
+            STOP = "True";
         main()
     else:
         subprocess.Popen(["daemonize", sys.argv[0], "execute"])
