@@ -16,10 +16,10 @@ STOP = False # don't execute gestures, useful for debugging
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 450 # sufficient movement to make decision on direction
+DECISION = 150 # sufficient movement to make decision on direction
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE_X = 18 # angle to interpret as horizontal
+ANGLE_X = 16 # angle to interpret as horizontal
 ANGLE_Y = 21 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
@@ -187,7 +187,7 @@ class Worker(threading.Thread):
         self.update_status(slot, event[slot],max_dis);
 
         #print(self.gesture["total"]);
-        print(self.gesture);
+        print(f"gesture = {self.gesture}", "gesture");
 
         # pick which type of guesture is currenlty executing after all fingures have been verified
         no_slots = len(self.gesture["slots"]);
@@ -225,12 +225,16 @@ class Worker(threading.Thread):
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
-                if (x_cum + y_cum > DECISION):
-                    if(no_slots == 3):
+                if(no_slots == 3):
+                    print(f"decision = {x_cum  ** 2 + y_cum ** 2 > DECISION ** 2}, {x_cum  ** 2} + {y_cum ** 2} > {DECISION ** 2} ", "angle");
+                if (x_cum  ** 2 + y_cum ** 2 > DECISION ** 2):
+                    if(no_slots > 2):
                         print(f"x_cum = {x_cum}", "angle")
                         print(f"y_cum = {y_cum}", "angle")
-                        print(f"horz {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}", "angle")
-                        print(f"vert {y_cum} >= {x_cum * tan((90 - ANGLE_Y) * pi/180)}", "angle")
+                        print(f"horz {y_cum <= x_cum * tan(ANGLE_X * pi/180)},  {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}", "angle")
+                        print(f"vert {y_cum >= x_cum * tan((90 - ANGLE_Y) * pi/180)}, {y_cum} >= {x_cum * tan((90 - ANGLE_Y) * pi/180)}", "angle")
+                        print(f"self.gesture = {self.gesture}", "angle")
+                    if(no_slots == 3):
                         if(y_cum <= x_cum * tan((ANGLE_X) * pi/180) ):
                             self.gesture["type"] = "swipe_horizontal";
                             self.rep_start = float(event["time"]);
