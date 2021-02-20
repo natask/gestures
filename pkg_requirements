@@ -1,11 +1,11 @@
-evtest
-daemonize
-evemu
-evemu-tools
-python3-pip
-python-pip
-xdotool
-xkbset
-setxkbmap
-python38-daemonize
-python38-pip
+evtest  ALL openSUSE
+daemonize   ALL
+evemu   ALL openSUSE
+evemu-tools ALL
+python3-pip ALL
+python-pip  ALL
+xdotool ALL openSUSE
+xkbset  ALL
+setxkbmap   openSUSE
+python38-daemonize  openSUSE
+python38-pip    openSUSE

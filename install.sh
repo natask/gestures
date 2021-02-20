@@ -3,8 +3,42 @@ install_location=/usr/local/bin
 config_location=~/.config/
 autostart_location=~/.config/autostart
 
+# detect distro
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$NAME
+    VER=$VERSION_ID
+elif type lsb_release >/dev/null 2>&1; then
+    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
+elif [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
+elif [ -f /etc/debian_version ]; then
+    OS=Debian
+    VER=$(cat /etc/debian_version)
+else
+    ...
+fi
+
+
 # install requirements
-pkgM=$( command -v yum || command -v apt-get || command -v pamac || command -v pacman ) || echo "package manager not found"
+case $OS in
+    openSUSE*) 
+        pkgM=zypper;;
+    Debain*)
+        pkgM=apt-get;;
+    Ubuntu*)
+        pkgM=apt-get;;
+    Fedora*)
+        pkgM=dnf;;
+    CentOS*)
+        pkgM=yum;;
+    *)
+        pkgM=$( command -v pamac || command -v pacman ) || echo "package manager not found"
+esac
+
 case ${pkgM} in
         *pacman)
           install=-S
@@ -22,9 +56,19 @@ case ${pkgM} in
           ;;
 esac
 
+# filter package list by distro
+# ATTENTION: needs further work, currently only openSUSE and non-openSUSE.
+case $OS in
+    openSUSE*)
+        cat ./pkg_requirements | grep openSUSE | awk '{ print $1 }' > PKG_REQ_LIST;;
+    *)
+        cat ./pkg_requirements | grep ALL | awk '{ print $1 }' > PKG_REQ_LIST;;
+esac
+
+
 ## cat, stdbuf are builtin, may need to install daemonize by hand
-echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
-cat pkg_requirements | xargs -n 1 -I{} sh -c "echo; echo Installing {}; sudo ${pkgM} ${install} ${auto} {}"
+echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' PKG_REQ_LIST)."
+cat PKG_REQ_LIST | xargs -n 1 -I{} sh -c "echo; echo Installing {}; sudo ${pkgM} ${install} ${auto} {}"
 
 ## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
 ## installs on global python
@@ -107,3 +151,6 @@ sudo pkill libinput-gestures
 sudo pkill fusuma 
 sudo pkill touchegg
 ${install_location}/gestures
+
+# clearup
+rm ./PKG_REQ_LIST
