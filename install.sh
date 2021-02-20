@@ -151,3 +151,6 @@ sudo pkill libinput-gestures
 sudo pkill fusuma 
 sudo pkill touchegg
 ${install_location}/gestures
+
+# clearup
+rm ./PKG_REQ_LIST

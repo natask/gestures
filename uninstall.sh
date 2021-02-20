@@ -104,3 +104,5 @@ done
 echo "Removing from auto start."
 rm -i ${autostart_location}/gestures.desktop 
 
+# clearup
+rm ./PKG_REQ_LIST
