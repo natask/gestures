@@ -642,7 +642,7 @@ class Worker(threading.Thread):
 # ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
     gesture_sources = [["TOUCHPAD", [], TOUCHPAD_CALIBRATION], ["TOUCHSCREEN", [], TOUCHSCREEN_CALIBRATION]]
-    mice_items = subprocess.getoutput("cat /proc/bus/input/devices | grep -iEB 2 mouse").split("--")
+    mice_items = subprocess.getoutput("cat /proc/bus/input/devices | grep -iEB 2 Handlers=.*mouse").split("--")
     mice_items[0] = "\n"+ mice_items[0]
     print(f"mice_items = {mice_items}")
     for gesture_source in gesture_sources:
