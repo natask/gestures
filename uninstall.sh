@@ -3,8 +3,41 @@ install_location=/usr/local/bin
 config_location=~/.config
 autostart_location=~/.config/autostart
 
+# detect distro
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$NAME
+    VER=$VERSION_ID
+elif type lsb_release >/dev/null 2>&1; then
+    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
+elif [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
+elif [ -f /etc/debian_version ]; then
+    OS=Debian
+    VER=$(cat /etc/debian_version)
+else
+    ...
+fi
+
 # uninstall requirements
-pkgM=$( command -v yum || command -v apt-get || command -v pamac || command -v pacman ) || echo "package manager not found"
+case $OS in
+    openSUSE*) 
+        pkgM=zypper;;
+    Debain*)
+        pkgM=apt-get;;
+    Ubuntu*)
+        pkgM=apt-get;;
+    Fedora*)
+        pkgM=dnf;;
+    CentOS*)
+        pkgM=yum;;
+    *)
+        pkgM=$( command -v pamac || command -v pacman ) || echo "package manager not found"
+esac
+
 case ${pkgM} in
   *pacman)
     uninstall=-R
@@ -21,14 +54,25 @@ case ${pkgM} in
     auto=-y
     ;;
 esac
+
+# filter package list by distro
+# ATTENTION: needs further work, currently only openSUSE and non-openSUSE.
+case $OS in
+    openSUSE*)
+        cat ./pkg_requirements | grep openSUSE | awk '{ print $1 }' > PKG_REQ_LIST;;
+    *)
+        cat ./pkg_requirements | grep ALL | awk '{ print $1 }' > PKG_REQ_LIST;;
+esac
+
+
 ## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
 ## uninstalls on global python
 echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' py_requirements)."
 xargs -d"\n" -n 1 -I{} -ra <( cat py_requirements ) sh -c "echo; echo Uninstalling {} through pip; sudo pip3 uninstall {};"
 
 ## cat, stdbuf are builtin, may need to install daemonize by hand
-echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
-xargs -d"\n" -n 1 -I{} -ra <( cat pkg_requirements ) sh -c "echo; echo Uninstalling {}; sudo ${pkgM} ${uninstall} {}"
+echo "Uninstalling $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' PKG_REQ_LIST)."
+xargs -d"\n" -n 1 -I{} -ra <( cat PKG_REQ_LIST ) sh -c "echo; echo Uninstalling {}; sudo ${pkgM} ${uninstall} {}"
 
 # remove user from input group
 while true; do

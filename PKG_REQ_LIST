@@ -1,0 +1,6 @@
+evtest
+evemu
+xdotool
+setxkbmap
+python38-daemonize
+python38-pip

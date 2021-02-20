@@ -24,7 +24,6 @@ fi
 
 
 # install requirements
-pkgM=$( command -v yum || command -v apt-get || command -v pamac || command -v pacman ) || echo "package manager not found"
 case $OS in
     openSUSE*) 
         pkgM=zypper;;
@@ -57,9 +56,19 @@ case ${pkgM} in
           ;;
 esac
 
+# filter package list by distro
+# ATTENTION: needs further work, currently only openSUSE and non-openSUSE.
+case $OS in
+    openSUSE*)
+        cat ./pkg_requirements | grep openSUSE | awk '{ print $1 }' > PKG_REQ_LIST;;
+    *)
+        cat ./pkg_requirements | grep ALL | awk '{ print $1 }' > PKG_REQ_LIST;;
+esac
+
+
 ## cat, stdbuf are builtin, may need to install daemonize by hand
-echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' pkg_requirements)."
-cat pkg_requirements | xargs -n 1 -I{} sh -c "echo; echo Installing {}; sudo ${pkgM} ${install} ${auto} {}"
+echo "Installing $(sed -n -e 'H;${x;s/\n/, /g;s/^,[ ]//;p;}' PKG_REQ_LIST)."
+cat PKG_REQ_LIST | xargs -n 1 -I{} sh -c "echo; echo Installing {}; sudo ${pkgM} ${install} ${auto} {}"
 
 ## subprocess, shlex, threading, queue, time, os, sys, math  are builtin
 ## installs on global python
