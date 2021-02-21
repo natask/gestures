@@ -657,7 +657,8 @@ def main():
             dev_path = item[1].split("=")[1]
             b = subprocess.getoutput(" udevadm test-builtin input_id" + " " + dev_path + f"| grep -c {gesture_source[0]}")[-1]
             if int(b):
-                device_event_name = item[3].split("=")[1].split(" ")[0]
+                device_tags = item[3].split("=")[1].split(" ")
+                device_event_name = list(filter(lambda x: "event" in x, device_tags))[0]
                 gesture_source[1].append(device_event_name)
                 threading.Thread(target=test, args=[device_event_name, gesture_source[2], gesture_source[0].lower()]).start() #change here to use evemu-record
         print(f"Handlers for " + gesture_source[0] + f": {gesture_source[1]}")
