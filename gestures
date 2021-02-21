@@ -16,14 +16,14 @@ STOP = False # don't execute gestures, useful for debugging
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 150 # sufficient movement to make decision on direction
+DECISION = 75 # sufficient movement to make decision on direction, scaled by the number of slots
 PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
 ANGLE_X = 16 # angle to interpret as horizontal
 ANGLE_Y = 21 # angle to interpret as vertical
 
 DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
-THRESHOLD_SQUARED = 150 # threshold to be considered a move, squared sum of x and y
+THRESHOLD_SQUARED = 30 # threshold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
@@ -192,6 +192,8 @@ class Worker(threading.Thread):
         # pick which type of guesture is currenlty executing after all fingures have been verified
         no_slots = len(self.gesture["slots"]);
         if (not self.gesture["slots"][slot]["moved"]):
+            if(no_slots >= 1):
+                print(f"gesture = {self.gesture}", "slot");
             self.gesture["slots"][slot]["moved"] = self.gesture["slots"][slot]["y-cum"] ** 2 + self.gesture["slots"][slot]["x-cum"] ** 2 > THRESHOLD_SQUARED
             self.gesture["total"]["moved"] += self.gesture["slots"][slot]["moved"];
 
@@ -202,7 +204,6 @@ class Worker(threading.Thread):
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
 
-                #if (x_cum + y_cum > PINCH_DECISION):
                 if(no_slots == 2):
                     print(f"dis_cum = {dis_cum}")
                     print(f"x_cum + y_cum = {x_cum + y_cum}")
@@ -225,10 +226,10 @@ class Worker(threading.Thread):
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
-                if(no_slots == 3):
-                    print(f"decision = {x_cum  ** 2 + y_cum ** 2 > DECISION ** 2}, {x_cum  ** 2} + {y_cum ** 2} > {DECISION ** 2} ", "angle");
-                if (x_cum  ** 2 + y_cum ** 2 > DECISION ** 2):
-                    if(no_slots > 2):
+                if(no_slots >= 3):
+                    print(f"decision = {x_cum  ** 2 + y_cum ** 2 > (no_slots * DECISION) ** 2}, {x_cum  ** 2} + {y_cum ** 2} > {(no_slots * DECISION) ** 2} ", "angle");
+                if (x_cum  ** 2 + y_cum ** 2 > (no_slots * DECISION) ** 2):
+                    if(no_slots >= 3):
                         print(f"x_cum = {x_cum}", "angle")
                         print(f"y_cum = {y_cum}", "angle")
                         print(f"horz {y_cum <= x_cum * tan(ANGLE_X * pi/180)},  {y_cum} <= {x_cum * tan(ANGLE_X * pi/180)}", "angle")
