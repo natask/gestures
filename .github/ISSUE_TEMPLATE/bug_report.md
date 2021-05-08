@@ -25,7 +25,7 @@ assignees: natask
 <!-- what happened instead -->
 
 **Debugging**
-<!-- include output of `cat /proc/bus/input/devices`. you are welcome to remove any other device other than your touchpad/s/ and/or touchscreen/s. -->
+<!-- include output of `gestures debug` and if relevent of `cat /proc/bus/input/devices`. you are welcome to remove any other device other than your touchpad/s/ and/or touchscreen/s. -->
 
 **Additional context**
 <!-- Add any other context about the problem here. -->
