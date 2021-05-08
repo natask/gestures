@@ -26,9 +26,9 @@ DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten f
 THRESHOLD_SQUARED = 30 # threshold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
-REP_THRES = 0.2 #need to break this TIME before REP engage
-REP_DAG = 250 # for 3 finger stuff
-REP = 150 # for 3 finger stuff
+REP_THRES = 0.2 #need to break this TIME before REP engages
+REP_DAG = 250 # REP on diagonal movement
+REP = 150 # REP for horizontal or veritical movement
 PINCH_REP = 40
 
 DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
@@ -69,6 +69,7 @@ class Worker(threading.Thread):
         self.gestures = gestures
         self.gesture_queue = []
         self.rep_start = 0
+        self.no_pinch = False;
         self.last_command_is_gesture_end = False
         self.pinch_deadzone_enabled = try_or_set("all_gestures[\"pinch_deadzone_enabled\"] == \"True\" ",True)
         self.pinch_deadzone_enabled = try_or_set("gestures[\"pinch_deadzone_enabled\"] == \"True\" ", self.pinch_deadzone_enabled, gestures=gestures)
@@ -169,7 +170,7 @@ class Worker(threading.Thread):
 
         if (not self.gesture["type"]):
             # pinch
-            if(self.gesture["total"]["moved"] >= 1):# move out the pinch gesture sutff so that can do gestures when only one finger is moving
+            if(self.gesture["total"]["moved"] >= 1 or self.no_pinch):# engage pinch gesture when only one finger is moving
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
@@ -179,9 +180,9 @@ class Worker(threading.Thread):
                     print(f"x_cum + y_cum = {x_cum + y_cum}")
                     print(f"x_cum = {x_cum}")
                     print(f"y_cum = {y_cum}")
-                    if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interspeting scrolling
-                        self.gesture["type"] = GestureCommands(type = "swipe", fingers = str(no_slots), direction = "t");
-                    elif(abs(dis_cum) > PINCH_THRESHOLD and 
+                    if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interpreting scrolling
+                        self.no_pinch = True;
+                    if(abs(dis_cum) > PINCH_THRESHOLD and
                         ((not self.pinch_deadzone_enabled) or self.out_of_deadzone())): # added deadzone
                         self.gesture["type"] = GestureCommands(type = "pinch", fingers = str(no_slots), event = "start");
                         if(dis_cum > 0): #pinch in
@@ -314,6 +315,10 @@ class Worker(threading.Thread):
             if(self.gesture["type"]):
                 self.gesture["type"].event = "end";
                 self.enqueue()
+            else:
+              if(no_slots >= 3):
+                  self.gesture["type"] = GestureCommands(type = "swipe", fingers = str(no_slots), direction = "t");
+                  self.enqueue()
 
         for gesture in self.gesture_queue:
             try:
@@ -328,7 +333,9 @@ class Worker(threading.Thread):
                 print("gesture queue = ", self.gesture_queue)
                 print("gesture information = ", self.gesture)
 
+        ## reset parameters
         self.gesture_queue = [];
+        self.no_pinch = False;
 
         # restart debounce
         self.debounce = float(clock);
