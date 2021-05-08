@@ -10,7 +10,7 @@ import getConfig
 from math import tan
 from math import pi
 DEBUG = 0 # variable to enable debug mode
-TYPE = [] # types that are printed
+TYPE = [] # types that are printed. valid ones ["angle", "slot", "gesture"]
 STOP = False # don't execute gestures, useful for debugging
 
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
@@ -27,7 +27,7 @@ THRESHOLD_SQUARED = 30 # threshold to be considered a move, squared sum of x and
 PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engage
-REP_DAG = 200 # for 3 finger stuff (depreciated)
+REP_DAG = 250 # for 3 finger stuff
 REP_3 = 150 # for 3 finger stuff
 REP_4x= 150 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being predictable
 REP_4 = 150 # for 4 finger stuff; repeat after this much x,y movement
@@ -125,10 +125,7 @@ class Worker(threading.Thread):
     def finger_start(self, event):
         """ append new finger to gesture.
         """
-        # end gesture
-        #self.gesture_end(event["time"]);
         ## restart debounce
-        #print("here")
         self.last_command_is_gesture_end = False;
         self.debounce = float(event["time"]);
 
@@ -143,21 +140,12 @@ class Worker(threading.Thread):
 
         self.gesture["slots"][slot] = {};
         self.gesture["slots"][slot]["x-cum"] = 0
-        #self.gesture["slots"][slot]["x-diff"] = 0
-        #self.gesture["slots"][slot]["x"] = self.status[slot]["x"];
-
         self.gesture["slots"][slot]["y-cum"] = 0
-        #self.gesture["slots"][slot]["y-diff"] = 0
-        #self.gesture["slots"][slot]["y"] = self.status[slot]["y"];
-
         self.gesture["slots"][slot]["moved"] = 0
 
         self.update_status(slot, event[slot], 0); #need to wait until status updated before calcing max_dis
         max_dis =  self.max_distance();
         self.status_dis =  max_dis;
-        #print(max_dis)
-        #print(self.status);
-
 
     def finger_update(self, event):
         """ Update started gesture
@@ -168,25 +156,17 @@ class Worker(threading.Thread):
 
         # gesture must be updated before status because need to capture difference between last and now
         self.gesture["slots"][slot]["x-cum"] +=  event[slot]["x"] - self.status[slot]["x"]
-        #self.gesture["slots"][slot]["x-diff"] = event[slot]["x"] - self.status[slot]["x"]
-        #self.gesture["slots"][slot]["x"] = self.status[slot]["x"];
-
         self.gesture["slots"][slot]["y-cum"] += event[slot]["y"] - self.status[slot]["y"]
-        #self.gesture["slots"][slot]["y-diff"] = event[slot]["y"] - self.status[slot]["y"]
-        #self.gesture["slots"][slot]["y"] = self.status[slot]["y"];
 
         self.gesture["total"]["x-cum"] += event[slot]["x"] - self.status[slot]["x"]
         self.gesture["total"]["y-cum"] += event[slot]["y"] - self.status[slot]["y"]
 
         max_dis =  self.max_distance();
-        #print(max_dis);
-        #print(self.status_dis);
         self.gesture["total"]["dis-cum"] += max_dis - self.status_dis;
 
 
         self.update_status(slot, event[slot],max_dis);
 
-        #print(self.gesture["total"]);
         print(f"gesture = {self.gesture}", "gesture");
 
         # pick which type of guesture is currenlty executing after all fingures have been verified
@@ -418,9 +398,6 @@ class Worker(threading.Thread):
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
 
-        #print(self.gesture_queue)
-        #print(self.gesture)
-
 
     def gesture_end(self, clock):
         """ end started gesture and reset gesture.
@@ -438,38 +415,28 @@ class Worker(threading.Thread):
         if (float(clock) - self.debounce >= DEBOUNCE):
             if(no_slots == 2):
                 if(self.gesture["type"] == "pinch_i"):
-                    #print(self.gestures["pinch"]['2']['i']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['i']['end']));
                 if(self.gesture["type"] == "pinch_o"):
-                    #print(self.gestures["pinch"]['2']['o']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['2']['o']['end']));
 
 
             if(no_slots == 3):
                 if (not self.gesture["type"]):
-                    #print("3 finger tap");
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['t']));
 
                 elif(self.gesture["type"] == "pinch_i"):
-                    #print(self.gestures["pinch"]['3']['i']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['3']['i']['end']));
                 elif(self.gesture["type"] == "pinch_o"):
-                    #print(self.gestures["pinch"]['3']['o']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['3']['o']['end']));
 
 
                 elif(self.gesture["type"] == "swipe_horizontal"):
-                    #print("end 3 finger swipe_hor")
-
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['l']['end']));
                 elif (self.gesture["type"] == "swipe_vertical"):
-                    #print("swipe_ver")
-
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['u']['end']));
 
                 elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
-                        #print("left up")
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['3']['rd']['end']));
@@ -479,15 +446,11 @@ class Worker(threading.Thread):
 
             if(no_slots == 4):
                 if (not self.gesture["type"]):
-                    #print("4 finger tap");
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['t']));
 
-
                 elif(self.gesture["type"] == "pinch_i"):
-                    #print(self.gestures["pinch"]['4']['i']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['4']['i']['end']));
                 elif(self.gesture["type"] == "pinch_o"):
-                    #print(self.gestures["pinch"]['4']['o']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['4']['o']['end']));
 
 
@@ -496,7 +459,6 @@ class Worker(threading.Thread):
 
                 elif(self.gesture["type"] == "swipe_diagonal_\\"):
                     if(x_cum < 0 and y_cum < 0): #left up
-                        #print("left up")
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['4']['rd']['end']));
@@ -506,28 +468,22 @@ class Worker(threading.Thread):
 
             if(no_slots == 5):
                 if (not self.gesture["type"]):
-                    #print("5 finger tap");
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['t']));
 
 
                 elif(self.gesture["type"] == "pinch_i"):
-                    #print(self.gestures["pinch"]['5']['i']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['5']['i']['end']));
                 elif(self.gesture["type"] == "pinch_o"):
-                    #print(self.gestures["pinch"]['5']['o']['end']);
                     self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["pinch"]['5']['o']['end']));
 
 
                 elif (self.gesture["type"] == "swipe_horizontal"):
-                    #print("end 3 finger swipe_hor")
-
                     if(x_cum <= 0):
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['l']['end']));
                     else:
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['r']['end']));#'' for "" doesn't work as expected
 
                 elif (self.gesture["type"] == "swipe_vertical"):
-                    #print("swipe_ver")
                     if(y_cum <= 0):
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['u']['end']));
                     else:
@@ -535,7 +491,6 @@ class Worker(threading.Thread):
 
                 elif(self.gesture["type"] == "swipe_diagonal"):
                     if(x_cum < 0 and y_cum < 0): #left up
-                        #print("left up")
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['lu']['end']));
                     if(x_cum >= 0 and y_cum >= 0): #right down
                         self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures["swipe"]['5']['rd']['end']));
@@ -547,7 +502,6 @@ class Worker(threading.Thread):
 
 
         for gesture in self.gesture_queue:
-            #print(gesture)
             try:
                 if(gesture and not STOP):
                     if (no_slots == 5):
@@ -600,7 +554,6 @@ class Worker(threading.Thread):
     def update_status(self, slot, new_state, max_dis):
         self.status[slot] = new_state;
         self.status_dis = max_dis;
-        #print(self.status);
 
     def max_distance(self):
         #return max distance between fingers
@@ -622,29 +575,6 @@ class Worker(threading.Thread):
         return are_all_fin_out_of_deadzone 
 # define and start gestures  
 
-# N: Name="ipts 1B96:005E"
-# P: Phys=heci3
-# S: Sysfs=/devices/pci0000:00/0000:00:16.4/mei::3e8d0870-271a-4208-8eb5-9acb9402ae04:0F/0044:1B96:005E.0007/input/input32
-# U: Uniq=
-# H: Handlers=mouse4 event26 
-# B: PROP=2
-# B: EV=1b
-# B: KEY=400 0 0 0 0 0
-# B: ABS=32f3800000000003
-# B: MSC=20
-# --
-# N: Name="Microsoft Surface Keyboard Touchpad"
-# P: Phys=usb-0000:00:14.0-1.4/input0
-# S: Sysfs=/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1.4/1-1.4:1.0/0003:045E:07CD.0012/input/input89
-# U: Uniq=
-# H: Handlers=mouse1 event6 
-# B: PROP=5
-# B: EV=1b
-# B: KEY=e520 10000 0 0 0 0
-# B: ABS=260800000000003
-# B: MSC=20
-
-# ORIENTATION AND AXIS MAJOR AND MINOR SEEM TO DEEL WITH HOW THE FINGER THAT IS CURRNETLY TOUCHING THE SCREENIS ORIENTED ON THE SCREEE, BELIVE ORIENTATION FIRES WHEN AXIS MAJOER BECOES LAEREE OR EBECOMES SMALLER THAN AXIS MINOR WBUT i HAVENT TESTED IT.
 def main():
     gesture_sources = [["TOUCHPAD", [], TOUCHPAD_CALIBRATION], ["TOUCHSCREEN", [], TOUCHSCREEN_CALIBRATION]]
     mice_items = subprocess.getoutput("cat /proc/bus/input/devices | grep -iEB 2 Handlers=.*mouse").split("--")
@@ -677,21 +607,16 @@ def test(device_event_name, factor, dev):
 
     # orientation, emplementing x and y swap takes a bit more of work
     orientation = subprocess.getoutput("orientation");
-    #print(orientation);
     orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
     orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
     
     swap_x_y = True if("right" == orientation or "left" == orientation) else False;
-    #print(swap_x_y)
     cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
     for line in cmd.stdout:
         # implement debouncing and switching from one to another
 
         # removes startup printing
-        #print(status_dict)
         line_arr = line.split()
-        #sys.stderr.write(str(line_arr))
-        #sys.stderr.write("\n")
         print(f"line_array : {line_arr}")
         if (len(line_arr) < 2 or line_arr[1] != "time"):
             continue
@@ -710,18 +635,12 @@ def test(device_event_name, factor, dev):
                 #notify worker to flush queue after finger is removed
                 q.put({"type": "finger_remove", "removed_slot": slot,"time": time })
                 slot = "-1";
-                #print(status_dict)
             else:
                 if(slot == "-1"):
                     slot = "0"
                 else:
                     slot = slot
                 status_dict[slot] = {"x_updated": 0, "y_updated": 0}
-
-                # debounce worker when finger is added
-                # q.put({"type": "debounce"})
-                #q.put({"type": "gesture_end", "time": time})
-
 
         if "(ABS_MT_SLOT)," == event:
             slot = state
@@ -750,14 +669,6 @@ def test(device_event_name, factor, dev):
                     status_dict[slot]["y"] = float(state) / factor * orientation_y;
                     status_dict[slot]["y_updated"] += 1;
                 update = True;
-
-        # if "(ABS_X)," == event:
-        #     x1 = int(state)
-        #     update = True
-        #
-        # if "(ABS_Y)," == event:
-        #     y1 = int(state)
-        #     update = True
 
         if event == "--------------" or event == "(MSC_TIMESTAMP),":
             continue
