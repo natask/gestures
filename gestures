@@ -69,7 +69,7 @@ class Worker(threading.Thread):
         self.gestures = gestures
         self.gesture_queue = []
         self.rep_start = 0
-        self.no_pinch = False;
+        self.pinch = True;
         self.last_command_is_gesture_end = False
         self.pinch_deadzone_enabled = try_or_set("all_gestures[\"pinch_deadzone_enabled\"] == \"True\" ",True)
         self.pinch_deadzone_enabled = try_or_set("gestures[\"pinch_deadzone_enabled\"] == \"True\" ", self.pinch_deadzone_enabled, gestures=gestures)
@@ -129,7 +129,7 @@ class Worker(threading.Thread):
         #  initiate state for finger
         slot = event["slot"];
 
-        self.gesture["slots"][slot] = {};
+        self.gesture["slots"][slot] = {}
         self.gesture["slots"][slot]["x-cum"] = 0
         self.gesture["slots"][slot]["y-cum"] = 0
         self.gesture["slots"][slot]["moved"] = 0
@@ -170,7 +170,7 @@ class Worker(threading.Thread):
 
         if (not self.gesture["type"]):
             # pinch
-            if(self.gesture["total"]["moved"] >= 1 or self.no_pinch):# engage pinch gesture when only one finger is moving
+            if(self.gesture["total"]["moved"] >= 1 and self.pinch):# engage pinch gesture when only one finger is moving
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
                 dis_cum =  self.gesture["total"]["dis-cum"];
@@ -181,7 +181,7 @@ class Worker(threading.Thread):
                     print(f"x_cum = {x_cum}")
                     print(f"y_cum = {y_cum}")
                     if(x_cum + y_cum > PINCH_DECISION): #small hack to stop pinch from interpreting scrolling
-                        self.no_pinch = True;
+                        self.pinch = False;
                     if(abs(dis_cum) > PINCH_THRESHOLD and
                         ((not self.pinch_deadzone_enabled) or self.out_of_deadzone())): # added deadzone
                         self.gesture["type"] = GestureCommands(type = "pinch", fingers = str(no_slots), event = "start");
@@ -236,7 +236,7 @@ class Worker(threading.Thread):
                         self.gesture["total"]["x-cum"] = 0;
                         self.gesture["total"]["y-cum"] = 0;
                         self.gesture["total"]["dis-cum"] = 0;
-        # inqueue gesture to run
+        # enqueue gesture to run
         else:
             if(float(event["time"]) - self.rep_start < REP_THRES): # to remove extra movement caused by movement before RE_THRES has been crossed
                 self.gesture["total"]["x-cum"] = 0;
@@ -335,7 +335,7 @@ class Worker(threading.Thread):
 
         ## reset parameters
         self.gesture_queue = [];
-        self.no_pinch = False;
+        self.pinch = True;
 
         # restart debounce
         self.debounce = float(clock);
