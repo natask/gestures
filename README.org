@@ -203,7 +203,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - currently customizable ::
   - swipe, pinch
   - 3,4,5 finger start and end gestures
-  - 3,4 finger update gestures but tailored to my workflow (currently only "left" ("l") and "left down" ("ld"),  can be customized to do update gestures)
+  - 3,4,5 finger update gestures (=left= (=l=), =right= (=r=), =up= (=u=), =down= (=d=)) and (=left down=, =left up=, =right up=, =right down=) are treated separately. For example, if =left= gesture direction has both =right= and =right up= update directions specified in configuration, =right=
     - still has limitations in terms of customizability since it is tailored for my workflow.
   - 2 finger fully customize pinch in/out gestures
   - specific gestures for touchpad and touchscreen
@@ -227,7 +227,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 #+end_src
 - breakdown ::
   - pinch_deadzone_enabled ::
-    - enables pinch. It can be set globally for all devices and/or specifically for a device. specific defination overrides global defination.
+    - enables pinch. It can be set globally for all devices and/or specifically for a device. specific definition overrides global definition.
     - if it is not set, the default is =True=.
   - (touchscreen, touchpad) ::
     - make a set of gestures apply to touchpad or touchscreen 
@@ -243,7 +243,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
     - (update) ::
       - what to do when the gesture is on going. going to start out with just 4 directions as that suffices my needs (and probably most others) but will expand to 8 directional configuration should there be demand.
     - (rep) ::
-      - how frequently is gesture update run. can make this directional as well, but don't have plans for that yet.
+      - how frequently is gesture update run. similar to =fusuma=. can make this directional as well, but don't have plans for that yet.
     - (device level tag) ::
       - already have gestures apply to touchscreen or touchpad. the extension to specify what device a specific set of gestures apply to.
 :END:
@@ -302,137 +302,170 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
           print("".join(lines))
     #+end_src
 
-    #+RESULTS:
-    #+begin_example
-    {"pinch_deadzone_enabled" : "False",
-    "touchpad" :{
-    "pinch_deadzone_enabled" : "False",
-    "swipe": {
+- the following is a backup config to use or compare to if yours is broken ::
+#+begin_src js
+{'pinch_deadzone_enabled' : 'False',
+'touchpad' :{
+'pinch_deadzone_enabled' : 'False',
+'swipe': {
+# t = tap
+# l = left
+# r = right
+# u = up
+# d = down
+# lu = left_up
+# rd = right_down
+# ld = left_down
+# ru = right_up
 
-    "3": {
-        "t" : [],
-        "l" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
-        "r" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+w"], "rep": ""},
-        "ld": {"start": ["xdotool keydown control","xdotool key Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""},
-        "ru": {"start": ["xdotool keydown control","xdotool key Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""}
-     },
+# 3 finger swipe
+'3': {
+    't' : [],
+    'l' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup alt'], 'rep': ''},
+    'r' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup alt'], 'rep': ''},
+    'u' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+i'], 'rep': ''},
+    'd' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+i'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+shift+t'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+w'], 'rep': ''},
+    'ld': {'start': ['xdotool keydown control','xdotool key Page_Up'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Page_Up"], 'ru': ["xdotool key Page_Down"]}, 'end': ['xdotool keyup control'], 'rep': ''},
+    'ru': {'start': ['xdotool keydown control','xdotool key Page_Down'],  'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Page_Up"], 'ru': ["xdotool key Page_Down"]}, 'end': ['xdotool keyup control'], 'rep': ''}
+ },
 
-    "4": {
-        "t" : ["xdotool key super+w"],
-        "l" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Right"],"update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup ctrl+alt"], "rep": ""},
-        "r" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "u" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "d" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+n"], "rep": ""},
-        "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
-        "ld": {"start": ["xdotool keydown alt","xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Left"], "ru": ["xdotool key Right"]}, "end": ["xdotool keyup Alt"], "rep": ""},
-        "ru": {"start": ["xdotool keydown alt","xdotool key Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["xdotool key Left"], "ru": ["xdotool key Down"]}, "end": [], "rep": ""}
-     },
-    "5": {
-        "t" : ["open_dictionary"],
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+1"], "rep": ""},
-        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+4"], "rep": ""},
-        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+2"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+5"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+3"], "rep": ""},
-        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+3"], "rep": ""},
-        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+2"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+1"], "rep": ""}
-         }
-     },
-
-
-     "pinch": {
-
-     "2": {
-        "i" : {"start": ["xdotool keydown control", "zoom-in-type"], "update": {"i": ["zoom-in-type"], "o": ["xdotool key minus"]}, "end": ["xdotool keyup ctrl"], "rep": ""},
-        "o" : {"start": ["xdotool keydown control", "xdotool key minus"], "update": {"i": ["zoom-in-type"], "o": ["xdotool key minus"]}, "end": ["xdotool keyup ctrl"], "rep": ""}
-     },
-     "3": {
-        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-     },
-    "4": {
-        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-     },
-    "5": {
-        "i" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-        } 
+# 4 finger swipe
+'4': {
+    't' : ['xdotool key super+w'],
+    'l' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Left'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'r' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Right'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'u' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Up'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'd' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Down'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+shift+n'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['save_and_close'], 'rep': ''},
+    'ld': {'start': ['xdotool keydown alt','xdotool key Left'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Left"], 'ru': ["xdotool key Right"]}, 'end': ['xdotool keyup Alt'], 'rep': ''},
+    'ru': {'start': ['xdotool keydown alt','xdotool key Right'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [],'ld': ["xdotool key Left"], 'ru': ["xdotool key Down"]}, 'end': [], 'rep': ''}
+ },
+# 5 finger swipe
+'5': {
+    't' : ['open_dictionary'],
+    'l' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+2'], 'rep': ''},
+    'r' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+1'], 'rep': ''},
+    'u' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['toggle_global_window_switcher'], 'rep': ''},
+    'd' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['flip'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+1'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['restartTouchpadAndPen'], 'rep': ''},
+    'ld': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+3'], 'rep': ''},
+    'ru': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['reset_keyboard'], 'rep': ''}
      }
-    },
+ },
 
 
-    "touchscreen" :{
-    "swipe": {
+ 'pinch': {
+# i = in
+# o = out
 
-    "3": {
-        "t" : ["xdotool key shift+insert"],
-        "l" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
-        "r" : {"start": ["xdotool keydown alt", "xdotool key Tab"], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup alt"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key super+i"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+w"], "rep": ""},
-        "ld": {"start": ["xdotool keydown control","xdotool key Page_Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""},
-        "ru": {"start": ["xdotool keydown control","xdotool key Page_Down"],  "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Page_Up"], "ru": ["xdotool key Page_Down"]}, "end": ["xdotool keyup control"], "rep": ""}
-     },
-
-    "4": {
-        "t" : ["xdotool key super+w"],
-        "l" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Right"],"update": {"l": ["xdotool key Left"], "r": ["xdotool key Right"], "u": ["xdotool key Up"], "d": ["xdotool key Down"], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool keyup ctrl+alt"], "rep": ""},
-        "r" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "u" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Up"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "d" : {"start": ["xdotool keydown ctrl+alt", "xdotool key Down"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": [], "rep": ""},
-        "lu": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+shift+n"], "rep": ""},
-        "rd": {"start": [], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["save_and_close"], "rep": ""},
-        "ld": {"start": ["xdotool keydown alt","xdotool key Left"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [], "ld": ["xdotool key Left"], "ru": ["xdotool key Right"]}, "end": ["xdotool keyup Alt"], "rep": ""},
-        "ru": {"start": ["xdotool keydown alt","xdotool key Right"], "update": {"l" :[], "r" :[], "u": [], "d": [], "lu": [], "rd": [],"ld": ["xdotool key Left"], "ru": ["xdotool key Down"]}, "end": [], "rep": ""}
-     },
-    "5": {
-        "t" : ["open_dictionary"],
-        "l" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
-        "r" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+alt+t"], "rep": ""},
-        "u" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["toggle_global_window_switcher"], "rep": ""},
-        "d" : {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["flip"], "rep": ""},
-        "lu": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["xdotool key ctrl+t"], "rep": ""},
-        "rd": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["restartTouchpadAndPen"], "rep": ""},
-        "ld": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["emacsclient -c -a \"\""], "rep": ""},
-        "ru": {"start": [], "update": {"l": [], "r": [], "u": [], "d": [], "lu": [], "rd": [], "ld": [], "ru": []}, "end": ["reset_keyboard"], "rep": ""}
-         }
-     },
-
-     "pinch": {
-
-     "2": {
-        "i" : {"start": ["", ""], "update": {"i": [""], "o": [""]}, "end": [""], "rep": ""},
-        "o" : {"start": ["", ""], "update": {"i": [""], "o": [""]}, "end": [""], "rep": ""}
-     },
-     "3": {
-        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-     },
-    "4": {
-        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-     },
-    "5": {
-        "i" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""},
-        "o" : {"start": ["", ""], "update": {"i": [], "o": []}, "end": [], "rep": ""}
-        } 
+# 2 finger pinch
+ '2': {
+    'i' : {'start': ['xdotool keydown control', 'xdotool key plus'], 'update': {'i': ['xdotool key plus'], 'o': ['xdotool key minus']}, 'end': ['xdotool keyup ctrl'], 'rep': ''},
+    'o' : {'start': ['xdotool keydown control', 'xdotool key minus'], 'update': {'i': ['xdotool key plus'], 'o': ['xdotool key minus']}, 'end': ['xdotool keyup ctrl'], 'rep': ''}
+ },
+# 3 finger pinch
+ '3': {
+    'i' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
+ },
+# 4 finger pinch
+'4': {
+    'i' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
+ },
+# 5 finger pinch
+'5': {
+    'i' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
     }
-    }
-    }
+ }
+},
 
-    #+end_example
 
+'touchscreen' :{
+'swipe': {
+# t = tap
+# l = left
+# r = right
+# u = up
+# d = down
+# lu = left_up
+# rd = right_down
+# ld = left_down
+# ru = right_up
+
+# 3 finger swipe
+'3': {
+    't' : ['xdotool key shift+Insert'],
+    'l' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup alt'], 'rep': ''},
+    'r' : {'start': ['xdotool keydown alt', 'xdotool key Tab'], 'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup alt'], 'rep': ''},
+    'u' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+i'], 'rep': ''},
+    'd' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key super+i'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+shift+t'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+w'], 'rep': ''},
+    'ld': {'start': ['xdotool keydown control','xdotool key Page_Up'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Page_Up"], 'ru': ["xdotool key Page_Down"]}, 'end': ['xdotool keyup control'], 'rep': ''},
+    'ru': {'start': ['xdotool keydown control','xdotool key Page_Down'],  'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Page_Up"], 'ru': ["xdotool key Page_Down"]}, 'end': ['xdotool keyup control'], 'rep': ''}
+ },
+
+# 4 finger swipe
+'4': {
+    't' : ['xdotool key super+w'],
+    'l' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Left'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'r' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Right'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'u' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Up'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'd' : {'start': ['xdotool keydown ctrl+alt', 'xdotool key Down'],'update': {'l': ["xdotool key Left"], 'r': ["xdotool key Right"], 'u': ["xdotool key Up"], 'd': ["xdotool key Down"], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool keyup ctrl+alt'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+shift+n'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['save_and_close'], 'rep': ''},
+    'ld': {'start': ['xdotool keydown alt','xdotool key Left'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': ["xdotool key Left"], 'ru': ["xdotool key Right"]}, 'end': ['xdotool keyup Alt'], 'rep': ''},
+    'ru': {'start': ['xdotool keydown alt','xdotool key Right'], 'update': {'l' :[], 'r' :[], 'u': [], 'd': [], 'lu': [], 'rd': [],'ld': ["xdotool key Left"], 'ru': ["xdotool key Right"]}, 'end': [], 'rep': ''}
+ },
+# 5 finger swipe
+'5': {
+    't' : ['open_dictionary'],
+    'l' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['emacsclient -c -a \"\"'], 'rep': ''},
+    'r' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+alt+t'], 'rep': ''},
+    'u' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['toggle_global_window_switcher'], 'rep': ''},
+    'd' : {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['flip'], 'rep': ''},
+    'lu': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['xdotool key ctrl+t'], 'rep': ''},
+    'rd': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['restartTouchpadAndPen'], 'rep': ''},
+    'ld': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['emacsclient -c -a \"\"'], 'rep': ''},
+    'ru': {'start': [], 'update': {'l': [], 'r': [], 'u': [], 'd': [], 'lu': [], 'rd': [], 'ld': [], 'ru': []}, 'end': ['reset_keyboard'], 'rep': ''}
+     }
+ },
+
+ 'pinch': {
+# i = in
+# o = out
+
+# 2 finger pinch
+ '2': {
+    'i' : {'start': ['', ''], 'update': {'i': [''], 'o': ['']}, 'end': [''], 'rep': ''},
+    'o' : {'start': ['', ''], 'update': {'i': [''], 'o': ['']}, 'end': [''], 'rep': ''}
+ },
+# 3 finger pinch
+ '3': {
+    'i' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
+ },
+# 4 finger pinch
+'4': {
+    'i' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
+ },
+# 5 finger pinch
+'5': {
+    'i' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''},
+    'o' : {'start': ['', ''], 'update': {'i': [], 'o': []}, 'end': [], 'rep': ''}
+    }
+}
+}
+}
+#+end_src
 :END:
-
 * Utilities
 :PROPERTIES:
 :ID:       f9b115f4-eb6b-4644-bc84-c174abf680d0
@@ -444,6 +477,9 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 :END:
 :NOTES:
 - utilities are scripts that enhance your default experience. They are placed in /usr/local/bin by the installation script.
+- open_dictionary ::
+  + script to goldendict on selected text.
+  + currently mapped to five finger click.
 - evemu_do ::
   - script that generates keyboard events. Much like xdotool.
   - currently deprecated but recommended if using wayland.
@@ -504,29 +540,32 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - may need to adjust the screen size and touchpad calibration. This can be automated by looking at the dimensions as evtest is called.
 - the knobs are as follows
   #+begin_src python
+DEBUG = 0 # variable to enable debug mode
+TYPE = [] # types that are printed. valid ones ["angle", "slot", "gesture"]
+STOP = False # don't execute gestures, useful for debugging
+
 TOUCHPAD_CALIBRATION = 1 # scaling down for touchpad movements
 TOUCHSCREEN_CALIBRATION = 2 # scaling down for touchscreen movements
 
-DECISION = 450 # sufficient movement to make decision on direction
-PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if finges moved symetrically in or out  #sufficient momvent to make pinch
+DECISION = 75 # sufficient movement to make decision on direction, scaled by the number of slots
+PINCH_DECISION = 160 #seems like x_cum and y_cum should got to around 0 if fingers moved symmetrically in or out  #sufficient momvent to make pinch
 
-ANGLE = 70 #x/y angle cleance
-CLEARANCE = 10#clearance for not intrepreting swipes between diagonal and horizontal or vertical
-  
-DEBOUNCE = 0.04  #sleep for now 40 ms, fastest tap around 25 ms , gotten from new_touch, touchpad data. in practice works well.
-THRESHOLD = 150 # threashold to be considered a move, squared sum of x and y
+ANGLE_X = 16 # angle to interpret as horizontal
+ANGLE_Y = 21 # angle to interpret as vertical
+
+DEBOUNCE = 0.02  #sleep for 10 ms(now 40 ms), fastest tap around 25 ms, gotten from new_touch, touchpad data. in practice works well.
+THRESHOLD_SQUARED = 30 # threshold to be considered a move, squared sum of x and y
 PINCH_THRESHOLD = 100
 
-REP_THRES = 0.2 #need to break this TIME before REP engage
-REP = 350 # for 3 finger stuff
-REP_3 = 150 # for 3 finger stuff
-REP_4x= 450 # for 4 finger x, was having issue with horizontal swipes overstepping but vertical ones being perdicatable
-REP_4 = 450 # for 4 finger stuff; repeat after this much x,y movement
+REP_THRES = 0.2 #need to break this TIME before REP engages
+REP_DAG = 250 # REP on diagonal movement
+REP = 150 # REP for horizontal or veritical movement
 PINCH_REP = 40
+
+DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
 #+end_src
 :END:
-
-* Alternatives 
+* Alternatives
 :PROPERTIES:
 :ID:       480d65ce-33d2-4222-9098-ffee46f42019
 :END:
@@ -557,7 +596,7 @@ PINCH_REP = 40
 :NOTES:
 - final version ::
  the current implementation suits my use case very well so I am in no hurry to customize. With that said, I would like to implement a fully customizable version of this. A C++ version would be good as well although current performance is more than enough. 
-something like nested gestures will be intersting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
+something like nested gestures will be interesting where swipes are nested in a hierarchy. for example, swiping left, then right then up is integrated differently than swiping left then right then down. At this point though I think improvements like this only have diminishing marginal returns so I will not pursue them.
 :END:
 * Versioning
 :PROPERTIES:
