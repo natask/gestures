@@ -255,11 +255,7 @@ class Worker(threading.Thread):
                        self.gesture["total"]["dis-cum"] = 0;
 
                 elif(self.gesture["type"].type == "swipe"):
-                    #both left and right are treated within the same data
-                    #this has to be changed
-                    actual_direction = self.gesture["type"].direction;
                     if(self.gesture["type"].direction in ['l', 'r', 'u', 'd']):
-                        self.gesture["type"].direction = 'l';
                         # better to zero out after a gesture is triggered
                         if(self.gesture["total"]["x-cum"] >= REP):
                             self.gesture["type"].update_direction = 'r';
@@ -280,22 +276,26 @@ class Worker(threading.Thread):
                             self.gesture["total"]["y-cum"] = 0;
 
                     elif(self.gesture["type"].direction in ['lu', 'rd', 'ld', 'ru']):
-                        self.gesture["type"].direction = 'ld';
-                        if(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP_DAG):
+                        if(self.gesture["total"]["x-cum"] +  self.gesture["total"]["y-cum"] >= REP_DAG):
+                            self.gesture["type"].update_direction = 'rd';
+                            self.enqueue()
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+                        elif(self.gesture["total"]["x-cum"] + self.gesture["total"]["y-cum"]  <=  -REP_DAG):
+                            self.gesture["type"].update_direction = 'lu';
+                            self.enqueue()
+                            self.gesture["total"]["x-cum"] = 0; #better to zero out
+                            self.gesture["total"]["y-cum"] = 0;
+                        elif(self.gesture["total"]["x-cum"] -  self.gesture["total"]["y-cum"] >= REP_DAG):
                             self.gesture["type"].update_direction = 'ru';
                             self.enqueue()
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
-
-                        if(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP_DAG):
+                        elif(self.gesture["total"]["x-cum"] - self.gesture["total"]["y-cum"]  <=  -REP_DAG):
                             self.gesture["type"].update_direction = 'ld';
                             self.enqueue()
                             self.gesture["total"]["x-cum"] = 0; #better to zero out
                             self.gesture["total"]["y-cum"] = 0;
-
-                    self.gesture["type"].direction = actual_direction;
-
-
 
     def gesture_end(self, clock):
         """ end started gesture and reset gesture.
