@@ -44,7 +44,7 @@ Click to watch.
 - [[#alternatives][Alternatives]]
 - [[#thoughts][Thoughts]]
 - [[#versioning][Versioning]]
-- [[#28-todos][TODOS]]
+- [[#39-todos][TODOS]]
 
 * Motivation 
 :PROPERTIES:
@@ -203,7 +203,7 @@ CLOCK: [2020-02-04 Tue 21:36:22]--[2020-02-04 Tue 23:35:54] =>  1:59
 - currently customizable ::
   - swipe, pinch
   - 3,4,5 finger start and end gestures
-  - 3,4,5 finger update gestures (=left= (=l=), =right= (=r=), =up= (=u=), =down= (=d=)) and (=left down=, =left up=, =right up=, =right down=) are treated separately. For example, if =left= gesture direction has both =right= and =right up= update directions specified in configuration, =right=
+  - 3,4,5 finger update gestures. (=left=, =right=, =up=, =down=) and (=left down=, =left up=, =right up=, =right down=) are separate update event groups. For example, if =left= gesture direction has both =right= and =right up= update directions specified in configuration, =right= is interpreted but =right up= is not.
     - still has limitations in terms of customizability since it is tailored for my workflow.
   - 2 finger fully customize pinch in/out gestures
   - specific gestures for touchpad and touchscreen
@@ -610,13 +610,15 @@ something like nested gestures will be interesting where swipes are nested in a 
 :NOTES:
 - this will be based upon Major and Minor completions in [[TODOS]].
 :END:
-* TODO [2/8] TODOS 
+* TODO [3/9] TODOS
 :PROPERTIES:
 :ID:       a0f0322f-5cee-46b0-acb1-82c5122bf600
 :END:
 :RESOURCES:
 :END:
 :LOGBOOK:
+- State "TODO"       from "TODO"       [2021-05-08 Sat 17:56:53]
+- State "TODO"       from "TODO"       [2021-05-08 Sat 17:56:52]
 - State "TODO"       from "TODO"       [2020-05-25 Mon 11:33:42]
 - State "TODO"       from              [2020-05-08 Fri 22:41:57]
 - Newly Created           [2020-01-17 Fri 03:06:38]
@@ -648,7 +650,7 @@ something like nested gestures will be interesting where swipes are nested in a 
 :NOTES:
 =evemu_do= injects keystroke events in existing connected input device. Attaching it to a standalone input device will be useful.
 :END:
-** TODO [0/1] enrich readme  
+** DONE [1/1] enrich readme
 :PROPERTIES:
 :ID:       2f6a4067-3cd9-42ca-8003-64f5ca0f471d
 :END:
@@ -657,7 +659,7 @@ something like nested gestures will be interesting where swipes are nested in a 
 :LOGBOOK:
 - Newly Created           [2020-01-17 Fri 03:15:49]
 :END:
-*** TODO update customization readme [/]
+*** DONE update customization readme [/]
 SCHEDULED: <2020-05-25 Mon> 
 :PROPERTIES:
 :ID:       292eb3c4-786d-4a07-a67d-387e25246b5f
@@ -709,7 +711,6 @@ do no error checking on whether proprieties "swipe", "5", "u" or "end" actually 
 - State "TODO"       from              [2020-02-03 Mon 04:26:33]
 - Newly Created           [2020-02-03 Mon 04:26:25]
 :END:
-
 ** TODO end gesture when adding fingers [/]
 SCHEDULED: <2020-05-25 Mon> 
 :PROPERTIES:
