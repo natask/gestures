@@ -6,7 +6,7 @@ import queue
 import time
 import os
 import sys
-import getConfig 
+import getConfig
 from math import tan
 from math import pi
 DEBUG = 0 # variable to enable debug mode
@@ -28,8 +28,11 @@ PINCH_THRESHOLD = 100
 
 REP_THRES = 0.2 #need to break this TIME before REP engages
 REP_DAG = 250 # REP on diagonal movement
+REP_DAG_DEF = 250 # REP on diagonal movement
 REP = 150 # REP for horizontal or veritical movement
+REP_DEF = 150 # REP for horizontal or veritical movement
 PINCH_REP = 40
+PINCH_REP_DEF = 40
 
 DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
 all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
@@ -39,7 +42,7 @@ def try_or_set(expression, val, gestures=False):
     try:
         return eval(expression);
     except Exception:
-        return val; 
+        return val;
 
 def print(*s):
     """redefine print to print only when debug is on."""
@@ -89,12 +92,8 @@ class Worker(threading.Thread):
             print("Worker")
             print(f"def: {event}")
             print("")
-            if event["type"] == "finger_start":
-                self.finger_start(event);
-            if event["type"] == "finger_update":
-                self.finger_update(event);
-            if event["type"] == "finger_remove":
-                self.finger_remove(event);
+
+            self.__getattribute__(event["type"])(event);
 
             # dequeue from gesture queue and execute after debounce times out
             if(len(self.gesture_queue) != 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
@@ -102,7 +101,7 @@ class Worker(threading.Thread):
                     try:
                         if(gesture and not STOP):
                             subprocess.call(gesture);
-                    except: 
+                    except:
                         print("error with:")
                         print("gesture = ", gesture)
                         print("gesture queue = ", self.gesture_queue)
@@ -192,7 +191,7 @@ class Worker(threading.Thread):
                         self.enqueue();
                         self.rep_start = float(event["time"]);
 
-            # swipe            
+            # swipe
             if(no_slots == self.gesture["total"]["moved"]):
                 x_cum = abs(self.gesture["total"]["x-cum"]);
                 y_cum = abs(self.gesture["total"]["y-cum"]);
@@ -246,6 +245,7 @@ class Worker(threading.Thread):
                 dis_cum =  self.gesture["total"]["dis-cum"];
                 self.gesture["type"].event = "update";
                 if(self.gesture["type"].type == "pinch"):
+                   PINCH_REP = self.getRep(PINCH_REP_DEF)
                    if(abs(dis_cum) > PINCH_REP):
                        if(dis_cum > 0): #pinch in
                            self.gesture["type"].update_direction = 'i';
@@ -257,6 +257,7 @@ class Worker(threading.Thread):
                 elif(self.gesture["type"].type == "swipe"):
                     if(self.gesture["type"].direction in ['l', 'r', 'u', 'd']):
                         # better to zero out after a gesture is triggered
+                        REP = self.getRep(REP_DEF)
                         if(self.gesture["total"]["x-cum"] >= REP):
                             self.gesture["type"].update_direction = 'r';
                             self.enqueue()
@@ -276,6 +277,7 @@ class Worker(threading.Thread):
                             self.gesture["total"]["y-cum"] = 0;
 
                     elif(self.gesture["type"].direction in ['lu', 'rd', 'ld', 'ru']):
+                        REP_DAG = self.getRep(REP_DAG_DEF)
                         if(self.gesture["total"]["x-cum"] +  self.gesture["total"]["y-cum"] >= REP_DAG):
                             self.gesture["type"].update_direction = 'rd';
                             self.enqueue()
@@ -327,7 +329,7 @@ class Worker(threading.Thread):
                         subprocess.Popen(gesture);
                     else:
                         subprocess.call(gesture);
-            except: 
+            except:
                 print("error with:")
                 print("gesture = ", gesture)
                 print("gesture queue = ", self.gesture_queue)
@@ -358,17 +360,17 @@ class Worker(threading.Thread):
             if(len(self.gesture_queue) == 0 and float(event["time"]) - self.debounce >= DEBOUNCE):
                 # do tap gesture according to finger
                 pass;
-            
+
             # end gesture
             self.gesture_end(event["time"]);
-            
+
         # update state
         removed_slot = event["removed_slot"];
 
         if(removed_slot in self.status ): #need this because not updating status when finger added (finger is on touchpad) but after finger starts (both x and y are valid)
             del self.status[removed_slot];
             del self.gesture["slots"][removed_slot];
-        
+
         self.status_dis = self.max_distance();
 
 
@@ -386,6 +388,17 @@ class Worker(threading.Thread):
         self.status[slot] = new_state;
         self.status_dis = max_dis;
 
+    def getRep(self, default):
+        structure = self.gesture["type"];
+        try:
+            rep =  self.gestures[structure.type][structure.fingers][structure.direction]["rep"];
+            if type(rep) == int:
+                return rep
+            else:
+                raise Exception
+        except Exception:
+            return default
+
     def max_distance(self):
         #return max distance between fingers
         max_dis = 0
@@ -399,7 +412,7 @@ class Worker(threading.Thread):
         """check if out of deadzone."""
         are_all_fin_out_of_deadzone = True;
         for fin in self.status:
-           fin_move = self.gesture["slots"][fin]["y-cum"] ** 2 + self.gesture["slots"][fin]["x-cum"] ** 2 
+           fin_move = self.gesture["slots"][fin]["y-cum"] ** 2 + self.gesture["slots"][fin]["x-cum"] ** 2
            print(fin_move)
            is_fin_out_of_deadzone = fin_move > DEADZONE_SQUARED
            are_all_fin_out_of_deadzone = are_all_fin_out_of_deadzone and is_fin_out_of_deadzone
@@ -454,7 +467,7 @@ def test(device_event_name, factor, dev):
     orientation = subprocess.getoutput("orientation");
     orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
     orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
-    
+
     swap_x_y = True if("right" == orientation or "left" == orientation) else False;
     cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
     for line in cmd.stdout:
@@ -500,7 +513,7 @@ def test(device_event_name, factor, dev):
                 if(swap_x_y):
                     status_dict[slot]["y"] = float(state) / factor * orientation_y;
                     status_dict[slot]["y_updated"] += 1;
-                else: 
+                else:
                     status_dict[slot]["x"] = float(state) / factor * orientation_x;
                     status_dict[slot]["x_updated"] += 1;
                 update = True;
@@ -520,7 +533,7 @@ def test(device_event_name, factor, dev):
         print("")
         print(f"update: {update}")
         print(f"slot: {slot}")
-        print(f"status_dict before end: {status_dict}")    
+        print(f"status_dict before end: {status_dict}")
         print(f"status before end: time = {time}, state = {state}, event = {event}")
         print("")
 
@@ -542,8 +555,8 @@ def test(device_event_name, factor, dev):
             update = False;
 
             q.put({"type": finger_type, "slot": slot, "time": time, slot: {"x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
-            
-        print(f"status_dict at end: {status_dict}")    
+
+        print(f"status_dict at end: {status_dict}")
         print(f"time = {time}, state = {state}, event = {event}")
         print("")
 if __name__ == "__main__":
@@ -555,10 +568,7 @@ if __name__ == "__main__":
         TYPE=sys.argv[2:];
         if "stop" in TYPE:
             TYPE.remove("stop");
-            STOP = "True";
+            STOP = True;
         main()
     else:
         subprocess.Popen(["daemonize", sys.argv[0], "execute"])
-
-
-
