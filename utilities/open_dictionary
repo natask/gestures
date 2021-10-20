@@ -1,2 +1,7 @@
 #!/bin/bash
-goldendict \"$(xsel|tr '\n' ' '|sed -r 's/^[^[:alpha:]]*([-[:alpha:]]*).*$/&/')\"
+if [ -z ${1+x} ]; then
+    text=$(xsel|tr '\n' ' '|sed -r 's/^[^[:alpha:]]*([-[:alpha:]]*).*$/&/');
+else
+    text=$1;
+fi
+goldendict ${text}
