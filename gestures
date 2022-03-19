@@ -377,13 +377,16 @@ class Worker(threading.Thread):
 
     def enqueue(self):
         structure = self.gesture["type"];
-        if(structure):
-            if structure.direction == 't':
-                self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction]));
-            elif structure.event == 'update':
-                self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction][structure.event][structure.update_direction]));
-            else:
-                self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction][structure.event]));
+        try: 
+            if(structure):
+                if structure.direction == 't':
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction]));
+                elif structure.event == 'update':
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction][structure.event][structure.update_direction]));
+                else:
+                    self.gesture_queue.extend(map(lambda x: shlex.split(x), self.gestures[structure.type][structure.fingers][structure.direction][structure.event]));
+        except Exception:
+            print("Gesture recognized but not configured.")
 
     def update_status(self, slot, new_state, max_dis):
         self.status[slot] = new_state;
