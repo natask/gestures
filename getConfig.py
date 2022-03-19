@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import simplejson as json
+import json
 
 ERR_PRINT = 5;
 def get_conf(conffile):
