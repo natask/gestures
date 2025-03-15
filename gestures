@@ -405,6 +405,10 @@ class Worker(threading.Thread):
 
     def max_distance(self):
         #return max distance between fingers
+        # Early return if we have fewer than 2 fingers
+        if len(self.status) < 2:
+            return 0
+
         max_dis = 0
         for fin1 in self.status:
             for fin2 in self.status:
