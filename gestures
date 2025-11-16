@@ -6,6 +6,9 @@ import queue
 import time
 import os
 import sys
+import struct
+import select
+import fcntl
 import getConfig
 from math import tan
 from math import pi
@@ -37,6 +40,21 @@ PINCH_REP_DEF = 40
 DEADZONE_SQUARED = 1000 # deadzone where up until this, pinches aren't interpreted
 all_gestures = getConfig.get_conf(os.path.expanduser("~/.config/gestures.conf"))
 
+# Linux input event constants
+# Event types
+EV_SYN = 0x00
+EV_KEY = 0x01
+EV_ABS = 0x03
+
+# Event codes for multitouch
+ABS_MT_SLOT = 0x2f        # 47 - Active slot being modified
+ABS_MT_POSITION_X = 0x35  # 53 - X position
+ABS_MT_POSITION_Y = 0x36  # 54 - Y position
+ABS_MT_TRACKING_ID = 0x39 # 57 - Unique ID of initiated contact
+
+# Event structure format: long + long + unsigned short + unsigned short + unsigned int
+FORMAT = 'llHHI'
+EVENT_SIZE = struct.calcsize(FORMAT)
 
 def try_or_set(expression, val, gestures=False):
     try:
@@ -471,102 +489,126 @@ def test(device_event_name, factor, dev):
     w = Worker(q, all_gestures[dev])
     w.start()
 
-    # orientation, emplementing x and y swap takes a bit more of work
-    orientation = subprocess.getoutput("orientation");
-    orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1;
-    orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1;
+    # Orientation setup
+    orientation = subprocess.getoutput("orientation")
+    orientation_y = -1 if("inverted" == orientation or "right" == orientation) else 1
+    orientation_x = -1 if("inverted" == orientation or "left" == orientation) else 1
+    swap_x_y = True if("right" == orientation or "left" == orientation) else False
 
-    swap_x_y = True if("right" == orientation or "left" == orientation) else False;
-    cmd = subprocess.Popen(["stdbuf", "-oL", "--","evtest",f"/dev/input/{device_event_name}"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
-    for line in cmd.stdout:
-        # implement debouncing and switching from one to another
+    # Open the device file directly
+    device_path = f"/dev/input/{device_event_name}"
+    try:
+        fd = open(device_path, "rb")
 
-        # removes startup printing
-        line_arr = line.split()
-        print(f"line_array : {line_arr}")
-        if (len(line_arr) < 2 or line_arr[1] != "time"):
-            continue
+        fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
-        # get time,state, and event
-        time = line_arr[2][:-1]
-        state, event =  line_arr[-1],line_arr[-3] # for evemu-record, (time)item 87.194577 on index 1, (state)item 0 on index 9,  (event) item ABS_MT_TRACKING_ID on index 8
+        # Set up polling for efficient reading
+        poll_obj = select.poll()
+        poll_obj.register(fd, select.POLLIN)
 
-        if "(ABS_MT_TRACKING_ID)," == event:
-            if state == "-1":
-                try:
-                    del status_dict[slot]
-                except:
-                    del status_dict[slot]
-
-                #notify worker to flush queue after finger is removed
-                q.put({"type": "finger_remove", "removed_slot": slot,"time": time })
-                slot = "-1";
-            else:
-                if(slot == "-1"):
-                    slot = "0"
-                else:
-                    slot = slot
-                status_dict[slot] = {"x_updated": 0, "y_updated": 0}
-
-        if "(ABS_MT_SLOT)," == event:
-            slot = state
-            if slot not in status_dict:
-                status_dict[slot] = {"x_updated": 0, "y_updated": 0}
-        print("")
-        print(f'slot != "-1", {slot} != "-1", {slot != "-1"}')
-        print(f"status dict: {status_dict}")
-        print("")
-        if "(ABS_MT_POSITION_X)," == event:
-            if (slot != "-1"):
-                if(swap_x_y):
-                    status_dict[slot]["y"] = float(state) / factor * orientation_y;
-                    status_dict[slot]["y_updated"] += 1;
-                else:
-                    status_dict[slot]["x"] = float(state) / factor * orientation_x;
-                    status_dict[slot]["x_updated"] += 1;
-                update = True;
-
-        if "(ABS_MT_POSITION_Y)," == event:
-            if (slot != "-1"):
-                if(swap_x_y):
-                    status_dict[slot]["x"] = float(state) / factor * orientation_x;
-                    status_dict[slot]["x_updated"] += 1;
-                else:
-                    status_dict[slot]["y"] = float(state) / factor * orientation_y;
-                    status_dict[slot]["y_updated"] += 1;
-                update = True;
-
-        if event == "--------------" or event == "(MSC_TIMESTAMP),":
-            continue
-        print("")
-        print(f"update: {update}")
-        print(f"slot: {slot}")
-        print(f"status_dict before end: {status_dict}")
-        print(f"status before end: time = {time}, state = {state}, event = {event}")
-        print("")
-
-        if update:
-            if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] <  1:
-                update = False
+        while True:
+            # Block until we have an event.
+            events = poll_obj.poll()
+            if not events:
                 continue
 
-            x = status_dict[slot]["x"];
-            y = status_dict[slot]["y"];
-            finger_type = "";
+            try:
+                event_data = fd.read(EVENT_SIZE)
 
-            if ("objs" not in status_dict[slot]):
-                status_dict[slot]["objs"] = True; # a way to call finger start the firt time a find is pressend down
-                finger_type = "finger_start";
-            else:
-                finger_type = "finger_update";
+                # If we couldn't read a complete event, continue
+                if not event_data or len(event_data) != EVENT_SIZE:
+                    continue
 
-            update = False;
+                # Unpack the event data
+                sec, usec, ev_type, ev_code, ev_value = struct.unpack(FORMAT, event_data)
 
-            q.put({"type": finger_type, "slot": slot, "time": time, slot: {"x" :x , "y" : y} }); #remember that these x,y have  been scaled down for touchscreen so that the gui can be seen
+                # Format time like evtest does
+                time_str = f"{sec}.{usec:06d}"
 
-        print(f"status_dict at end: {status_dict}")
-        print(f"time = {time}, state = {state}, event = {event}")
-        print("")
+                # Only process relevant event types
+                if ev_type != EV_ABS:
+                    continue
+
+                # Process tracking ID events
+                if ev_code == ABS_MT_TRACKING_ID:
+                    if ev_value == -1 or ev_value == 0xffffffff:  # -1 in unsigned 32-bit
+                        try:
+                            del status_dict[slot]
+                        except KeyError:
+                            pass
+
+                        # Notify worker to flush queue after finger is removed
+                        q.put({"type": "finger_remove", "removed_slot": slot, "time": time_str})
+                        slot = "-1"
+                    else:
+                        if slot == "-1":
+                            slot = "0"
+                        status_dict[slot] = {"x_updated": 0, "y_updated": 0}
+
+                # Process slot change events
+                elif ev_code == ABS_MT_SLOT:
+                    slot = str(ev_value)
+                    if slot not in status_dict:
+                        status_dict[slot] = {"x_updated": 0, "y_updated": 0}
+
+                # Process X position events
+                elif ev_code == ABS_MT_POSITION_X:
+                    if slot != "-1":
+                        if swap_x_y:
+                            status_dict[slot]["y"] = float(ev_value) / factor * orientation_y
+                            status_dict[slot]["y_updated"] += 1
+                        else:
+                            status_dict[slot]["x"] = float(ev_value) / factor * orientation_x
+                            status_dict[slot]["x_updated"] += 1
+                        update = True
+
+                # Process Y position events
+                elif ev_code == ABS_MT_POSITION_Y:
+                    if slot != "-1":
+                        if swap_x_y:
+                            status_dict[slot]["x"] = float(ev_value) / factor * orientation_x
+                            status_dict[slot]["x_updated"] += 1
+                        else:
+                            status_dict[slot]["y"] = float(ev_value) / factor * orientation_y
+                            status_dict[slot]["y_updated"] += 1
+                        update = True
+
+                print("")
+                print(f"update: {update}")
+                print(f"slot: {slot}")
+                print(f"status_dict: {status_dict}")
+                print("")
+
+                if update:
+                    if status_dict[slot]["x_updated"] < 1 or status_dict[slot]["y_updated"] < 1:
+                        update = False
+                        continue
+
+                    x = status_dict[slot]["x"]
+                    y = status_dict[slot]["y"]
+
+                    if "objs" not in status_dict[slot]:
+                        status_dict[slot]["objs"] = True
+                        finger_type = "finger_start"
+                    else:
+                        finger_type = "finger_update"
+
+                    update = False
+                    q.put({"type": finger_type, "slot": slot, "time": time_str, slot: {"x": x, "y": y}})
+
+            except IOError:
+                # No data available right now
+                continue
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        # Clean up
+        try:
+            fd.close()
+        except:
+            pass
+
 if __name__ == "__main__":
     import sys
     # if call comes with arguments, pass only the first one. if it doesn't, start normal orientation operation
